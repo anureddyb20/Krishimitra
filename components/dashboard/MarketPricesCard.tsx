@@ -4,52 +4,59 @@ import React from 'react';
 import Link from 'next/link';
 import { TrendingUp, ArrowUpRight, ArrowDownRight, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { useLocation } from '@/lib/LocationContext';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { formatCurrencyINR } from '@/lib/utils';
 
 export function MarketPricesCard() {
   const { t } = useTranslation();
+  const { selectedState, selectedDistrict } = useLocation();
 
   const prices = [
     {
       id: 'm1',
-      name: 'Black Pepper (കുരുമുളക്)',
-      market: 'Nedumangad, TVM',
-      price: 640,
-      trend: '+3.2%',
+      name: 'Paddy / Rice (వరి / ಭತ್ತ / ধান)',
+      market: `${selectedDistrict} APMC Yard, ${selectedState}`,
+      price: 2450,
+      unit: '/qtl',
+      trend: '+2.1%',
       isUp: true,
     },
     {
       id: 'm2',
-      name: 'Natural Rubber RSS4 (റബ്ബർ)',
-      market: 'Kottayam Mandi',
-      price: 185,
-      trend: '+1.1%',
+      name: 'Cotton Medium Staple (ಹತ್ತಿ / పత్తి)',
+      market: `${selectedDistrict} Market, ${selectedState}`,
+      price: 7100,
+      unit: '/qtl',
+      trend: '+1.4%',
       isUp: true,
     },
     {
       id: 'm3',
-      name: 'Small Cardamom (ഏലം 7mm)',
-      market: 'Vandanmedu, Idukki',
-      price: 2350,
-      trend: '-1.4%',
+      name: 'Maize / Corn (ಮಕ್ಕೆಜೋಳ / మొక్కజొన్న)',
+      market: `${selectedDistrict} Mandi, ${selectedState}`,
+      price: 2150,
+      unit: '/qtl',
+      trend: '-0.8%',
       isUp: false,
     },
     {
       id: 'm4',
-      name: 'Raw Coconut (നാളികേരം)',
-      market: 'Vengeri, Kozhikode',
-      price: 38,
-      trend: '+2.7%',
+      name: 'Red Chilli / Spices (ಮೆಣಸಿನಕಾಯಿ / మిరప)',
+      market: `${selectedDistrict} Trade Center, ${selectedState}`,
+      price: 185,
+      unit: '/kg',
+      trend: '+3.5%',
       isUp: true,
     },
     {
       id: 'm5',
-      name: 'Nendran Banana (നേന്ത്രൻ)',
-      market: 'Thrissur APMC',
-      price: 52,
-      trend: '+4.0%',
+      name: 'Sugarcane / Commercial (ಕಬ್ಬು / చెరకు)',
+      market: `${selectedDistrict} Sugar Mill Bench, ${selectedState}`,
+      price: 340,
+      unit: '/qtl',
+      trend: '+0.5%',
       isUp: true,
     },
   ];
@@ -60,7 +67,7 @@ export function MarketPricesCard() {
         <div className="flex items-center gap-2">
           <CardTitle>
             <TrendingUp className="w-5 h-5 text-emerald-700" />
-            {t('dashboard.market_card_title', 'Kerala Mandi Market Rates')}
+            {t('dashboard.market_card_title', 'APMC Mandi Market Rates')}
           </CardTitle>
         </div>
         <Badge variant="demo" size="sm">
@@ -72,7 +79,7 @@ export function MarketPricesCard() {
       <CardContent className="space-y-2.5">
         <div className="text-[11px] text-stone-500 font-medium px-2 py-1 bg-stone-50 rounded-lg flex justify-between">
           <span>{t('dashboard.market_crop', 'Commodity')} / {t('dashboard.market_location', 'Market')}</span>
-          <span>{t('dashboard.market_price', 'Price / Kg')}</span>
+          <span>{t('dashboard.market_price', 'Price')}</span>
         </div>
 
         {prices.map((item) => (
@@ -82,13 +89,13 @@ export function MarketPricesCard() {
           >
             <div>
               <h4 className="text-sm font-bold text-stone-900">{item.name}</h4>
-              <p className="text-xs text-stone-500">{item.market}</p>
+              <p className="text-xs text-stone-500 truncate max-w-[200px]">{item.market}</p>
             </div>
 
             <div className="text-right">
               <div className="text-sm font-extrabold text-stone-900">
                 {formatCurrencyINR(item.price)}
-                <span className="text-[11px] font-normal text-stone-500">/kg</span>
+                <span className="text-[11px] font-normal text-stone-500">{item.unit}</span>
               </div>
               <div
                 className={`text-xs font-semibold inline-flex items-center gap-0.5 ${

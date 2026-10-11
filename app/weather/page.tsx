@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import {
   CloudSun,
@@ -15,22 +15,22 @@ import {
   Info,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { useLocation } from '@/lib/LocationContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AlertBanner } from '@/components/ui/AlertBanner';
-import { KeralaDistrictSelector } from '@/components/common/KeralaDistrictSelector';
-import { KeralaDistrict } from '@/types';
+import { LocationSelector } from '@/components/common/LocationSelector';
 
 export default function WeatherPage() {
   const { t } = useTranslation();
-  const [district, setDistrict] = useState<KeralaDistrict>('Wayanad');
+  const { selectedState, selectedDistrict } = useLocation();
 
   const fiveDayForecast = [
-    { day: 'Today', temp: '24°C', rain: '25 mm', condition: 'Heavy Showers', wind: '14 km/h' },
-    { day: 'Tomorrow', temp: '23°C', rain: '32 mm', condition: 'Moderate Rain', wind: '16 km/h' },
-    { day: 'Day 3', temp: '25°C', rain: '14 mm', condition: 'Scattered Showers', wind: '12 km/h' },
-    { day: 'Day 4', temp: '27°C', rain: '6 mm', condition: 'Partly Cloudy', wind: '10 km/h' },
-    { day: 'Day 5', temp: '28°C', rain: '2 mm', condition: 'Sunny Intervals', wind: '9 km/h' },
+    { day: 'Today', temp: '28°C', rain: '12 mm', condition: 'Passing Showers', wind: '14 km/h' },
+    { day: 'Tomorrow', temp: '29°C', rain: '5 mm', condition: 'Partly Cloudy', wind: '11 km/h' },
+    { day: 'Day 3', temp: '31°C', rain: '0 mm', condition: 'Sunny & Warm', wind: '10 km/h' },
+    { day: 'Day 4', temp: '30°C', rain: '2 mm', condition: 'Isolated Clouds', wind: '9 km/h' },
+    { day: 'Day 5', temp: '29°C', rain: '8 mm', condition: 'Evening Breeze', wind: '12 km/h' },
   ];
 
   return (
@@ -64,14 +64,14 @@ export default function WeatherPage() {
             </p>
           </div>
 
-          <KeralaDistrictSelector value={district} onChange={setDistrict} />
+          <LocationSelector />
         </div>
       </div>
 
       <AlertBanner
         type="info"
         title="India Meteorological Department (IMD) Integration Planned"
-        message="This module will consume real-time gridded satellite precipitation and Doppler radar forecasts directly from IMD and OpenWeather in Phase 3. The data below is simulated for interface demonstration."
+        message={`This module will consume real-time gridded precipitation and Doppler radar forecasts directly from IMD for ${selectedDistrict}, ${selectedState} in Phase 3. The data below is simulated for interface demonstration.`}
       />
 
       {/* 5-Day Agro Forecast Cards */}
@@ -79,7 +79,7 @@ export default function WeatherPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base sm:text-lg">
             <Calendar className="w-5 h-5 text-emerald-700" />
-            5-Day Microclimate Forecast ({district} District)
+            5-Day Microclimate Forecast ({selectedDistrict}, {selectedState})
           </CardTitle>
           <Badge variant="default" size="sm">
             Demonstration Forecast
@@ -95,10 +95,10 @@ export default function WeatherPage() {
               >
                 <span className="text-xs font-bold text-stone-600 block">{item.day}</span>
                 <div className="py-2">
-                  <CloudRain className="w-8 h-8 text-sky-600 mx-auto" />
+                  <CloudSun className="w-8 h-8 text-amber-500 mx-auto" />
                 </div>
                 <div className="text-lg font-extrabold text-stone-900">{item.temp}</div>
-                <p className="text-xs font-medium text-sky-700">{item.condition}</p>
+                <p className="text-xs font-medium text-emerald-700">{item.condition}</p>
                 <div className="pt-2 border-t border-stone-200/60 text-[11px] text-stone-500 space-y-0.5">
                   <div>Rain: <span className="font-semibold text-stone-700">{item.rain}</span></div>
                   <div>Wind: <span className="font-semibold text-stone-700">{item.wind}</span></div>
@@ -109,32 +109,32 @@ export default function WeatherPage() {
         </CardContent>
       </Card>
 
-      {/* Kerala Agro-Climatic Advisory Grid */}
+      {/* Agro-Climatic Advisory Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Cardamom & Black Pepper Guidance</CardTitle>
+            <CardTitle className="text-base">Standing Field Crops Guidance</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-stone-700">
             <p>
-              Due to consecutive wet days predicted in {district}, high relative humidity (above 85%) creates peak conditions for fungal spore proliferation.
+              Current relative humidity and soil moisture in {selectedDistrict} support active vegetative growth.
             </p>
             <div className="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-950 font-medium">
-              Recommendation: Ensure vine basins are freed of weeds to improve aerated ventilation and reduce humidity pooling near root crowns.
+              Recommendation: Plan scheduled top dressing and inter-cultivation weeding during upcoming dry sunshine windows.
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Paddy & Wetland Advisory</CardTitle>
+            <CardTitle className="text-base">Horticulture & Cash Crop Advisory</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-stone-700">
             <p>
-              Runoff accumulation expected in low-lying channels. Inspect water drainage sluices and bund heights.
+              Light scattered showers expected. Ensure mulch cover around tree basins to conserve subterranean soil moisture.
             </p>
             <div className="p-3 bg-amber-50 rounded-xl text-xs text-amber-950 font-medium">
-              Recommendation: Postpone top-dressing of urea until high runoff subsides to prevent nitrogen leaching.
+              Recommendation: Regulate micro-sprinklers based on soil tensiometer readings.
             </div>
           </CardContent>
         </Card>

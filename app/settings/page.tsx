@@ -14,11 +14,11 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { useLocation } from '@/lib/LocationContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { KeralaDistrictSelector } from '@/components/common/KeralaDistrictSelector';
-import { KeralaDistrict } from '@/types';
+import { LocationSelector } from '@/components/common/LocationSelector';
 import { SupportedLanguage } from '@/types/i18n';
 
 export default function SettingsPage() {
@@ -29,7 +29,7 @@ export default function SettingsPage() {
     supportedLanguages,
     setIsOnboardingOpen,
   } = useTranslation();
-  const [district, setDistrict] = useState<KeralaDistrict>('Idukki');
+  const { selectedState, selectedDistrict } = useLocation();
   const [savedNotice, setSavedNotice] = useState(false);
 
   const handleLanguageSelect = (code: SupportedLanguage) => {
@@ -62,7 +62,7 @@ export default function SettingsPage() {
           <p className="text-sm text-stone-600 mt-1">
             {t(
               'modules.settings_subtitle',
-              'Configure interface language, default district, notifications, and offline preferences.'
+              'Configure interface language, default state & district, notifications, and offline preferences.'
             )}
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function SettingsPage() {
       {savedNotice && (
         <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-950 text-xs font-medium flex items-center gap-2 animate-in fade-in">
           <Check className="w-4 h-4 text-emerald-700" />
-          Language preference updated and saved to your device.
+          Language and regional location updated and saved to your device.
         </div>
       )}
 
@@ -90,7 +90,7 @@ export default function SettingsPage() {
           <p className="text-xs text-stone-500 mt-1">
             {t(
               'common.language_note',
-              'Language preference is saved on your device. Changing language does not alter your farm records or location.'
+              'Selecting a regional language automatically tailors the locations to your state.'
             )}
           </p>
         </CardHeader>
@@ -114,8 +114,8 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-bold text-stone-900">{lang.name}</span>
                       {lang.badge && (
-                        <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded font-semibold">
-                          KL
+                        <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">
+                          {lang.badge}
                         </span>
                       )}
                     </div>
@@ -148,28 +148,30 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 2. Default District Setting */}
+      {/* 2. Default State & District Setting */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-emerald-700" />
-            <CardTitle className="text-base sm:text-lg">Default Kerala District</CardTitle>
+            <CardTitle className="text-base sm:text-lg">
+              Farm Region (State & District)
+            </CardTitle>
           </div>
           <p className="text-xs text-stone-500 mt-1">
-            Setting your district customizes local weather and mandi market benchmarks.
+            Select your farm location to customize local weather forecasts and APMC mandi market benchmarks.
           </p>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-stone-50 border border-stone-200">
             <div>
               <span className="text-sm font-bold text-stone-900 block">
-                Primary Agro-Climatic District:
+                Active Farm Location:
               </span>
-              <span className="text-xs text-stone-500">
-                Independent of your chosen interface language.
+              <span className="text-xs text-stone-600 font-medium">
+                {selectedDistrict} District, {selectedState}
               </span>
             </div>
-            <KeralaDistrictSelector value={district} onChange={setDistrict} />
+            <LocationSelector />
           </div>
         </CardContent>
       </Card>
@@ -188,7 +190,7 @@ export default function SettingsPage() {
           <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
             <div>
               <span className="font-semibold text-stone-800 block">WhatsApp & SMS Monsoon Alerts</span>
-              <span className="text-stone-500">Receive extreme weather warnings from Kerala Disaster Management.</span>
+              <span className="text-stone-500">Receive localized extreme weather warnings directly on your mobile.</span>
             </div>
             <Badge variant="demo" size="sm">Phase 2</Badge>
           </div>

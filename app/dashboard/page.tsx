@@ -10,8 +10,10 @@ import {
   Calendar,
   Sparkles,
   Info,
+  MapPin,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { useLocation } from '@/lib/LocationContext';
 import { MetricCard } from '@/components/ui/MetricCard';
 import { WeatherCard } from '@/components/dashboard/WeatherCard';
 import { RecommendationsCard } from '@/components/dashboard/RecommendationsCard';
@@ -24,6 +26,7 @@ import { AlertBanner } from '@/components/ui/AlertBanner';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const { selectedState, selectedDistrict } = useLocation();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
@@ -42,7 +45,7 @@ export default function DashboardPage() {
           <p className="text-sm text-stone-600 mt-1">
             {t(
               'dashboard.subtitle',
-              'Daily agricultural overview and advisory briefing for Kerala farmers'
+              'Daily agricultural overview and advisory briefing for your farm'
             )}
           </p>
         </div>
@@ -54,7 +57,10 @@ export default function DashboardPage() {
           </div>
           <div className="text-xs">
             <span className="font-bold text-stone-900 block">Demonstration Farmer</span>
-            <span className="text-stone-500">Idukki & Wayanad Holdings</span>
+            <span className="text-emerald-700 font-medium flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              {selectedDistrict}, {selectedState}
+            </span>
           </div>
         </div>
       </div>
@@ -63,16 +69,16 @@ export default function DashboardPage() {
       <AlertBanner
         type="info"
         title="Phase 1 Demonstration Mode"
-        message="All weather figures, market rates, disease alerts, and recommendations displayed on this dashboard are simulated demonstration data for testing the UI and multilingual interface. Live integrations will be connected in subsequent phases."
+        message={`All weather figures, mandi rates, disease alerts, and recommendations displayed on this dashboard are simulated demonstration data tailored for ${selectedDistrict}, ${selectedState}. Changing language or state/district dynamically updates regional agricultural benchmarks.`}
       />
 
       {/* Quick Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Agro Climate"
-          value="24°C"
-          unit="Rain Expected"
-          subtitle="High Range Zone"
+          value="26°C"
+          unit="Normal"
+          subtitle={`${selectedDistrict} Region`}
           icon={<CloudRain className="w-5 h-5" />}
           variant="sky"
         />
@@ -81,14 +87,14 @@ export default function DashboardPage() {
           title="Total Crops"
           value="4"
           unit="Active Varieties"
-          subtitle="10.0 Acres under care"
+          subtitle="8.5 Acres under care"
           icon={<Sprout className="w-5 h-5" />}
           variant="emerald"
         />
 
         <MetricCard
           title="Crop Health"
-          value="91%"
+          value="92%"
           unit="Average Score"
           subtitle="1 Attention Alert"
           icon={<ShieldCheck className="w-5 h-5" />}

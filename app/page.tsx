@@ -19,14 +19,17 @@ import {
   ChevronRight,
   Database,
   Globe2,
+  MapPin,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { useLocation } from '@/lib/LocationContext';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 
 export default function LandingPage() {
   const { t, language } = useTranslation();
+  const { selectedState, selectedDistrict } = useLocation();
 
   const capabilities = [
     {
@@ -35,7 +38,7 @@ export default function LandingPage() {
       title: t('landing.feat_ai_title', 'AI Farming Assistant'),
       desc: t(
         'landing.feat_ai_desc',
-        'Bilingual conversational intelligence providing context-aware guidance on crop care, fertilizers, organic methods, and government schemes.'
+        'Multilingual conversational intelligence providing context-aware guidance on crop care, fertilizers, organic methods, and government schemes.'
       ),
       phase: 'Phase 2',
       href: '/ai-assistant',
@@ -46,7 +49,7 @@ export default function LandingPage() {
       title: t('landing.feat_weather_title', 'Monsoon & Weather Intelligence'),
       desc: t(
         'landing.feat_weather_desc',
-        'District-level microclimate forecasts with actionable agricultural advisories to protect crops from sudden downpours and humidity spikes.'
+        'District-level microclimate forecasts with actionable agricultural advisories to protect crops from sudden downpours and weather fluctuations.'
       ),
       phase: 'Phase 3',
       href: '/weather',
@@ -57,7 +60,7 @@ export default function LandingPage() {
       title: t('landing.feat_health_title', 'Crop Health & Disease Scanner'),
       desc: t(
         'landing.feat_health_desc',
-        'Vision-assisted diagnosis for Kerala-specific crop afflictions like Mahali in Arecanut, Quick Wilt in Pepper, and Sigatoka in Banana.'
+        'Vision-assisted diagnosis for crop afflictions, fungal infections, and pest infestations across Indian agricultural crops.'
       ),
       phase: 'Phase 3',
       href: '/crop-health',
@@ -68,7 +71,7 @@ export default function LandingPage() {
       title: t('landing.feat_market_title', 'Mandi Market Prices'),
       desc: t(
         'landing.feat_market_desc',
-        'Transparent price tracking across Kerala agricultural markets for spices, coconut, natural rubber, and vegetables.'
+        'Transparent price tracking across Indian APMC agricultural markets for grains, pulses, cash crops, and vegetables.'
       ),
       phase: 'Phase 4',
       href: '/market-prices',
@@ -86,34 +89,47 @@ export default function LandingPage() {
     },
   ];
 
-  const keralaDistrictsCount = 14;
-
   return (
     <div className="flex flex-col gap-16 sm:gap-24 pb-20">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 sm:pt-20 lg:pt-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative overflow-hidden pt-8 sm:pt-16 lg:pt-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
           {/* Subtle decorative background gradient */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-emerald-100/50 via-stone-50/20 to-transparent pointer-events-none -z-10 rounded-3xl" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 bg-gradient-to-b from-emerald-100/40 via-stone-50/20 to-transparent pointer-events-none -z-10 rounded-3xl" />
 
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs sm:text-sm font-semibold shadow-xs">
               <Sprout className="w-4 h-4 text-emerald-700" />
-              <span>{t('landing.badge', 'Designed for Kerala Agro-Climatic Zones')}</span>
+              <span>{t('landing.badge', 'Designed for Diverse Indian Agro-Climatic Zones')}</span>
               <span className="text-emerald-400">•</span>
               <span className="text-emerald-700 font-medium">Smart India Hackathon</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.15]">
-              {t('landing.hero_title', 'AI-Powered Personal Farming Assistant for Kerala Farmers')}
+              {t('landing.hero_title', 'AI-Powered Personal Farming Assistant for All Indian Farmers')}
             </h1>
 
             <p className="text-base sm:text-lg lg:text-xl text-stone-600 leading-relaxed max-w-2xl mx-auto">
               {t(
                 'landing.hero_subtitle',
-                'Equipping smallholder farmers across all 14 districts with localized weather intelligence, early crop disease diagnosis, real-time market prices, and native Malayalam AI advisory.'
+                'Empowering smallholder farmers across India with localized weather intelligence, early crop disease diagnosis, real-time mandi prices, and native AI advisory in regional languages.'
               )}
             </p>
+
+            {/* Selected Location Pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-stone-200 shadow-xs text-xs sm:text-sm">
+              <MapPin className="w-4 h-4 text-emerald-700" />
+              <span className="text-stone-500">Selected Location:</span>
+              <span className="font-bold text-emerald-950">
+                {selectedDistrict}, {selectedState}
+              </span>
+              <Link
+                href="/dashboard"
+                className="ml-2 text-xs font-semibold text-emerald-700 hover:text-emerald-900 underline"
+              >
+                Change in Header ↗
+              </Link>
+            </div>
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
@@ -135,8 +151,8 @@ export default function LandingPage() {
             {/* Quick metrics banner */}
             <div className="pt-8 border-t border-stone-200/80 max-w-2xl mx-auto grid grid-cols-3 gap-4 text-center">
               <div>
-                <span className="block text-2xl sm:text-3xl font-extrabold text-emerald-900">14</span>
-                <span className="text-xs text-stone-500 font-medium">Kerala Districts</span>
+                <span className="block text-2xl sm:text-3xl font-extrabold text-emerald-900">28+</span>
+                <span className="text-xs text-stone-500 font-medium">Indian States & UTs</span>
               </div>
               <div>
                 <span className="block text-2xl sm:text-3xl font-extrabold text-emerald-900">6</span>
@@ -152,7 +168,7 @@ export default function LandingPage() {
       </section>
 
       {/* Interactive Platform Preview Banner */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="rounded-3xl bg-gradient-to-br from-emerald-950 via-stone-900 to-emerald-900 p-6 sm:p-10 text-white shadow-xl relative overflow-hidden border border-emerald-800">
           <div className="relative z-10 max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-800/80 text-emerald-200 text-xs font-semibold border border-emerald-700">
@@ -160,10 +176,10 @@ export default function LandingPage() {
               {t('phase_badge', 'Phase 1: Architecture & UI Foundation')}
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-              A Complete Agricultural Technology System for Kerala
+              A Unified Smart Farming Assistant for All Indian Agriculture
             </h2>
             <p className="text-stone-300 text-sm sm:text-base leading-relaxed">
-              KrishiMitra combines localized high-resolution monsoon data, plant pathology knowledge for spice and cash crops, and Gemini LLMs optimized for native Malayalam agricultural vocabulary.
+              KrishiMitra combines microclimate weather intelligence, computer vision plant diagnosis, and Gemini LLMs optimized for Indian farmers across Karnataka, Andhra Pradesh, Telangana, Tamil Nadu, Kerala, Uttar Pradesh, and all states.
             </p>
             <div className="pt-2 flex flex-wrap gap-3">
               <Link href="/dashboard">
@@ -182,7 +198,7 @@ export default function LandingPage() {
       </section>
 
       {/* Core Platform Capabilities Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
             {t('landing.features_title', 'Comprehensive Agricultural Intelligence')}
@@ -190,7 +206,7 @@ export default function LandingPage() {
           <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
             {t(
               'landing.features_subtitle',
-              'Engineered to address the unique agricultural challenges of Kerala — from tropical monsoon variations to plantation cash crop security.'
+              'Engineered to address diverse farming challenges across Indian states — from monsoon variations to cash crop security.'
             )}
           </p>
         </div>
@@ -231,21 +247,21 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Kerala Focus Section */}
+      {/* Pan-India Regional Agricultural Focus Section */}
       <section className="bg-stone-50 border-y border-stone-200/90 py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <div className="space-y-5">
               <Badge variant="success" size="sm">
-                Kerala Agro-Ecology
+                Pan-India Agro-Climatic Intelligence
               </Badge>
               <h2 className="text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
-                {t('landing.kerala_focus_title', "Tailored for Kerala's Unique Agriculture")}
+                {t('landing.regional_focus_title', 'Built for Diverse Indian Agriculture')}
               </h2>
               <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
                 {t(
-                  'landing.kerala_focus_desc',
-                  "Kerala's farming ecology is distinct from generic mainland farming — dominated by high-value spices, plantation estates, wetland paddy (such as Kuttanad), and homestead mixed cropping."
+                  'landing.regional_focus_desc',
+                  "India's agricultural landscape is rich and diverse — spanning Karnataka's fertile plateaus, Andhra & Telangana's cotton and chilli hubs, Tamil Nadu's delta paddy, Kerala's spices, and the Indo-Gangetic wheat-rice belts."
                 )}
               </p>
 
@@ -253,9 +269,9 @@ export default function LandingPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-bold text-stone-900">High-Value Spices & Plantation Crops</h4>
+                    <h4 className="text-sm font-bold text-stone-900">South Indian Agricultural Hubs</h4>
                     <p className="text-xs text-stone-600">
-                      Black pepper, cardamom, nutmeg, coconut, and natural rubber require precision fungal prevention during monsoon months.
+                      Tailored support for Karnataka (sugarcane, ragi, coffee), Andhra & Telangana (cotton, chilli, maize, paddy), Tamil Nadu (Cauvery delta paddy, turmeric), and Kerala (spices, coconut).
                     </p>
                   </div>
                 </div>
@@ -263,9 +279,9 @@ export default function LandingPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-bold text-stone-900">Kuttanad Below-Sea-Level Wetland Farming</h4>
+                    <h4 className="text-sm font-bold text-stone-900">Central & Northern Grain Belts</h4>
                     <p className="text-xs text-stone-600">
-                      Specialized saline intrusion and flood management advisories for paddy polders in Alappuzha & Kottayam.
+                      Fertilizer scheduling, canal irrigation alerts, and crop surveillance for Uttar Pradesh, Madhya Pradesh, Punjab, Haryana, and Rajasthan.
                     </p>
                   </div>
                 </div>
@@ -273,9 +289,9 @@ export default function LandingPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-bold text-stone-900">High Range Hill Farming</h4>
+                    <h4 className="text-sm font-bold text-stone-900">Regional Language Voice & Text Models</h4>
                     <p className="text-xs text-stone-600">
-                      Landslide vulnerability notifications and slope soil erosion management for Idukki and Wayanad farmers.
+                      Native AI assistance in Kannada, Telugu, Tamil, Malayalam, Hindi, and English with voice query support planned.
                     </p>
                   </div>
                 </div>
@@ -283,12 +299,12 @@ export default function LandingPage() {
 
               <div className="p-4 rounded-2xl bg-white border border-stone-200">
                 <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider block mb-1">
-                  {t('landing.kerala_crops_title', 'Key Supported Crops')}
+                  {t('landing.regional_crops_title', 'Key Supported Crops')}
                 </span>
                 <p className="text-xs text-stone-700 font-medium leading-relaxed">
                   {t(
-                    'landing.kerala_crops_list',
-                    'Coconut • Nendran Banana • Black Pepper • Cardamom • Natural Rubber • Wetland Paddy • Arecanut • Nutmeg'
+                    'landing.regional_crops_list',
+                    'Paddy • Wheat • Cotton • Sugarcane • Maize • Spices • Coconut • Groundnut • Pulses • Vegetables'
                   )}
                 </p>
               </div>
@@ -308,23 +324,23 @@ export default function LandingPage() {
 
               <div className="space-y-4 text-xs">
                 <div className="p-3.5 rounded-xl bg-stone-50 border border-stone-200">
-                  <span className="font-bold text-stone-900 block mb-1">Frontend Layer</span>
+                  <span className="font-bold text-stone-900 block mb-1">Left Taskbar & Frontend Layer</span>
                   <p className="text-stone-600">
-                    Next.js App Router, React 19, TypeScript, Tailwind CSS, Lucide icons, responsive layout with mobile-first design.
+                    Next.js App Router, React 19, Tailwind CSS v4, dynamic left-side taskbar navigation, Lucide icons, mobile drawer.
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-stone-50 border border-stone-200">
-                  <span className="font-bold text-stone-900 block mb-1">Internationalization (i18n) Engine</span>
+                  <span className="font-bold text-stone-900 block mb-1">Regional Language & Location Engine</span>
                   <p className="text-stone-600">
-                    Client & server-compatible translation architecture with 6 Indian languages (Malayalam, English, Hindi, Kannada, Tamil, Telugu) and persistent locale state.
+                    Smart location mapping: Kannada sets Karnataka, Telugu sets AP/Telangana, Tamil sets Tamil Nadu, Malayalam sets Kerala, Hindi sets North/Central states, and English allows all states.
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-stone-50 border border-stone-200">
                   <span className="font-bold text-stone-900 block mb-1">Backend & Database Readiness</span>
                   <p className="text-stone-600">
-                    Next.js Route Handlers, Supabase client/server connection helpers, modular schemas with safe fallback when credentials are unconfigured.
+                    Next.js Route Handlers, Supabase client/server connection helpers, modular schemas with safe fallback.
                   </p>
                 </div>
               </div>
@@ -332,7 +348,7 @@ export default function LandingPage() {
               <div className="pt-2">
                 <Link href="/dashboard" className="w-full">
                   <Button variant="primary" size="md" className="w-full justify-center">
-                    Enter Demonstration Dashboard
+                    Enter Farmer Dashboard
                   </Button>
                 </Link>
               </div>
@@ -349,7 +365,7 @@ export default function LandingPage() {
         <p className="text-stone-600 text-sm sm:text-base max-w-xl mx-auto">
           {t(
             'landing.cta_banner_desc',
-            'Explore the Phase 1 interactive dashboard and preview the next generation of farmer-first AI assistance.'
+            'Explore the interactive taskbar and dashboard to preview next-generation farmer-first AI assistance.'
           )}
         </p>
         <div>
