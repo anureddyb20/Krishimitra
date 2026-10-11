@@ -4,7 +4,7 @@ import { isSupabaseServerConfigured } from '@/lib/supabase/server';
 export async function GET() {
   return NextResponse.json({
     status: 'healthy',
-    project: 'KrishiMitra — AI-Powered Personal Farming Assistant for Kerala Farmers',
+    project: 'KrishiMitra — AI-Powered Personal Farming Assistant for Indian Farmers',
     phase: 'Phase 1: Project Setup, Multilingual Foundation & Frontend Architecture',
     supportedLanguages: ['ml', 'en', 'hi', 'kn', 'ta', 'te'],
     services: {

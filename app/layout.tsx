@@ -3,18 +3,18 @@ import './globals.css';
 import { AppProviders } from '@/components/layout/AppProviders';
 
 export const metadata: Metadata = {
-  title: 'KrishiMitra | AI-Powered Personal Farming Assistant for Kerala Farmers',
+  title: 'KrishiMitra | AI-Powered Personal Farming Assistant for Indian Farmers',
   description:
-    'Empowering Kerala farmers with AI farming assistance, monsoon weather intelligence, crop disease diagnosis, and mandi market prices. Supports Malayalam and 5 other languages.',
+    'Empowering Indian farmers across all states with AI farming assistance, localized weather intelligence, crop disease diagnosis, and mandi market prices. Supports 6 Indian languages.',
   keywords: [
     'KrishiMitra',
-    'Kerala Farming',
-    'Malayalam AI',
-    'Agriculture Kerala',
+    'Indian Agriculture',
+    'Multilingual Agri AI',
     'Smart India Hackathon',
     'Crop Disease Diagnosis',
-    'Kerala Weather Advisory',
-    'Mandi Prices Kerala',
+    'Weather Advisory IMD',
+    'Mandi Prices APMC',
+    'Kannada Telugu Tamil Malayalam Hindi English Farming',
   ],
   authors: [{ name: 'KrishiMitra Development Team' }],
   icons: {

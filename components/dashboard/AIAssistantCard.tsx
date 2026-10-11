@@ -14,9 +14,9 @@ export function AIAssistantCard() {
   const [query, setQuery] = useState('');
 
   const samplePrompts = [
-    t('dashboard.prompt_1', 'How to treat quick wilt in black pepper?'),
-    t('dashboard.prompt_2', 'Current government subsidy for micro-irrigation in Kerala?'),
-    t('dashboard.prompt_3', 'Best organic pesticide for banana stem borer?'),
+    t('dashboard.prompt_1', 'How to manage pest infestation in standing crops?'),
+    t('dashboard.prompt_2', 'Current government subsidies for micro-irrigation and solar pumps?'),
+    t('dashboard.prompt_3', 'Best organic fertilizer practices for higher crop yield?'),
   ];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -46,7 +46,7 @@ export function AIAssistantCard() {
             <p className="text-xs text-emerald-300/80 mt-0.5">
               {t(
                 'dashboard.ai_quick_subtitle',
-                'Instant answers for Kerala farmers in Malayalam & English'
+                'Instant answers for Indian farmers in regional languages and English'
               )}
             </p>
           </div>
@@ -62,7 +62,7 @@ export function AIAssistantCard() {
         {/* Sample prompt chips */}
         <div className="space-y-1.5">
           <span className="text-[11px] font-semibold text-emerald-300/80 uppercase tracking-wider block">
-            Suggested Kerala Farming Questions:
+            Suggested Agricultural Questions:
           </span>
           <div className="flex flex-wrap gap-2">
             {samplePrompts.map((p, index) => (

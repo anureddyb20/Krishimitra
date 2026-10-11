@@ -23,7 +23,7 @@ export function Footer() {
                   {t('app_name', 'KrishiMitra')}
                 </span>
                 <span className="block text-xs text-emerald-400 font-medium">
-                  {t('app_tagline', 'AI-Powered Personal Farming Assistant for Kerala Farmers')}
+                  {t('app_tagline', 'AI-Powered Personal Farming Assistant for Indian Farmers')}
                 </span>
               </div>
             </div>
@@ -31,13 +31,13 @@ export function Footer() {
             <p className="text-sm text-stone-400 max-w-md leading-relaxed">
               {t(
                 'footer.tagline',
-                'Empowering Kerala smallholder farmers with state-of-the-art agricultural artificial intelligence, weather intelligence, and crop disease diagnosis.'
+                'Empowering Indian smallholder farmers across all states with state-of-the-art agricultural artificial intelligence, weather intelligence, and crop disease diagnosis.'
               )}
             </p>
 
             <div className="flex items-center gap-2 pt-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">
-                <Cpu className="w-3.5 h-3.5 text-emerald-400" /> Smart India Hackathon 2024
+                <Cpu className="w-3.5 h-3.5 text-emerald-400" /> Smart India Hackathon
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-stone-800 text-stone-300 border border-stone-700">
                 Phase 1 Prototype
@@ -58,12 +58,12 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/ai-assistant" className="hover:text-emerald-400 transition-colors flex items-center gap-1">
-                  {t('nav.ai_assistant', 'AI Assistant (Malayalam)')}
+                  {t('nav.ai_assistant', 'AI Assistant')}
                 </Link>
               </li>
               <li>
                 <Link href="/weather" className="hover:text-emerald-400 transition-colors flex items-center gap-1">
-                  {t('nav.weather', 'Kerala Weather & IMD')}
+                  {t('nav.weather', 'Weather & Climate')}
                 </Link>
               </li>
               <li>
@@ -87,10 +87,10 @@ export function Footer() {
           {/* Regional & Technology Info */}
           <div>
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Regional Coverage
+              National Agro Coverage
             </h4>
             <p className="text-xs text-stone-400 leading-relaxed mb-3">
-              Tailored for all 14 districts of Kerala: Alappuzha, Ernakulam, Idukki, Kannur, Kasaragod, Kollam, Kottayam, Kozhikode, Malappuram, Palakkad, Pathanamthitta, Thiruvananthapuram, Thrissur, and Wayanad.
+              Supporting farmers across Karnataka, Andhra Pradesh, Telangana, Tamil Nadu, Kerala, Maharashtra, Uttar Pradesh, Rajasthan, Madhya Pradesh, Punjab, Haryana, and Gujarat in 6 native languages.
             </p>
             <div className="pt-2 border-t border-stone-800 text-xs text-stone-400">
               <p className="font-semibold text-stone-300 mb-1">Architecture Roadmap:</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Thermometer,
   CloudRain,
@@ -11,6 +11,8 @@ import {
   Sparkles,
   Info,
   MapPin,
+  LayoutGrid,
+  TrendingUp,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useLocation } from '@/lib/LocationContext';
@@ -27,6 +29,7 @@ import { AlertBanner } from '@/components/ui/AlertBanner';
 export default function DashboardPage() {
   const { t } = useTranslation();
   const { selectedState, selectedDistrict } = useLocation();
+  const [activeTab, setActiveTab] = useState<'all' | 'crops' | 'weather' | 'markets'>('all');
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
@@ -112,35 +115,115 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Primary Layout Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2 spans on desktop) */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* AI Entry Card */}
-          <AIAssistantCard />
+      {/* Dashboard View Selector Tabs */}
+      <div className="flex items-center gap-1.5 p-1.5 bg-stone-100/90 rounded-2xl border border-stone-200 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setActiveTab('all')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+            activeTab === 'all'
+              ? 'bg-white text-emerald-900 shadow-xs border border-stone-200/80'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+          }`}
+        >
+          <LayoutGrid className="w-4 h-4 text-emerald-700" />
+          <span>{t('dashboard.tab_overview', 'All Overview')}</span>
+        </button>
 
-          {/* Weather Briefing */}
-          <WeatherCard />
+        <button
+          type="button"
+          onClick={() => setActiveTab('crops')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+            activeTab === 'crops'
+              ? 'bg-white text-emerald-900 shadow-xs border border-stone-200/80'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+          }`}
+        >
+          <Sprout className="w-4 h-4 text-emerald-700" />
+          <span>{t('dashboard.tab_crops', 'Crops & Health')}</span>
+        </button>
 
-          {/* Recommendations Card */}
-          <RecommendationsCard />
+        <button
+          type="button"
+          onClick={() => setActiveTab('weather')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+            activeTab === 'weather'
+              ? 'bg-white text-emerald-900 shadow-xs border border-stone-200/80'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+          }`}
+        >
+          <CloudRain className="w-4 h-4 text-sky-600" />
+          <span>{t('dashboard.tab_weather', 'Weather & Tasks')}</span>
+        </button>
 
-          {/* My Crops Card */}
-          <MyCropsCard />
-        </div>
-
-        {/* Right Column (1 span on desktop) */}
-        <div className="space-y-6">
-          {/* Crop Health & Diagnostic Warning */}
-          <CropHealthCard />
-
-          {/* Market Mandi Rates */}
-          <MarketPricesCard />
-
-          {/* Upcoming Farm Tasks */}
-          <UpcomingTasksCard />
-        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab('markets')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+            activeTab === 'markets'
+              ? 'bg-white text-emerald-900 shadow-xs border border-stone-200/80'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4 text-teal-600" />
+          <span>{t('dashboard.tab_markets', 'Mandi Markets')}</span>
+        </button>
       </div>
+
+      {/* Primary Layout Grid */}
+      {activeTab === 'all' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <AIAssistantCard />
+            <WeatherCard />
+            <RecommendationsCard />
+            <MyCropsCard />
+          </div>
+
+          <div className="space-y-6">
+            <CropHealthCard />
+            <MarketPricesCard />
+            <UpcomingTasksCard />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'crops' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <MyCropsCard />
+            <RecommendationsCard />
+          </div>
+          <div className="space-y-6">
+            <CropHealthCard />
+            <AIAssistantCard />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'weather' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <WeatherCard />
+          </div>
+          <div className="space-y-6">
+            <UpcomingTasksCard />
+            <AIAssistantCard />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'markets' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <MarketPricesCard />
+          </div>
+          <div className="space-y-6">
+            <RecommendationsCard />
+            <AIAssistantCard />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,14 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useTranslation } from '@/lib/i18n/LanguageContext';
 import {
-  getStatesForLanguage,
-  getDefaultStateForLanguage,
+  ALL_INDIAN_STATES,
   getDistrictsForState,
   getDefaultDistrictForState,
-  ALL_INDIAN_STATES,
 } from './locations';
+
+const STATE_STORAGE_KEY = 'krishimitra_selected_state';
+const DISTRICT_STORAGE_KEY = 'krishimitra_selected_district';
 
 interface LocationContextType {
   selectedState: string;
@@ -17,45 +17,76 @@ interface LocationContextType {
   setSelectedDistrict: (district: string) => void;
   availableStates: string[];
   availableDistricts: string[];
+  suggestLocationForLanguage: (lang: string) => void;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
 
 export function LocationProvider({ children }: { children: React.ReactNode }) {
-  const { language } = useTranslation();
+  const [selectedState, setSelectedStateState] = useState<string>('Kerala');
+  const [selectedDistrict, setSelectedDistrictState] = useState<string>('Wayanad');
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  const [selectedState, setSelectedStateState] = useState<string>(() =>
-    getDefaultStateForLanguage('kn')
-  );
-  const [selectedDistrict, setSelectedDistrictState] = useState<string>(() =>
-    getDefaultDistrictForState('Karnataka')
-  );
-
-  // When language changes, update state and district accordingly
+  // Restore saved state and district from localStorage
   useEffect(() => {
-    const statesForLang = getStatesForLanguage(language);
-    // If the currently selected state is not among the language's states, switch to default
-    if (!statesForLang.includes(selectedState)) {
-      const defaultState = getDefaultStateForLanguage(language);
-      const defaultDist = getDefaultDistrictForState(defaultState);
-      setSelectedStateState(defaultState);
-      setSelectedDistrictState(defaultDist);
+    try {
+      const savedState = localStorage.getItem(STATE_STORAGE_KEY);
+      const savedDistrict = localStorage.getItem(DISTRICT_STORAGE_KEY);
+      if (savedState && ALL_INDIAN_STATES.includes(savedState)) {
+        setSelectedStateState(savedState);
+        const validDistricts = getDistrictsForState(savedState);
+        if (savedDistrict && validDistricts.includes(savedDistrict)) {
+          setSelectedDistrictState(savedDistrict);
+        } else {
+          setSelectedDistrictState(validDistricts[0] || '');
+        }
+      }
+    } catch {
+      // ignore in restricted mode
+    } finally {
+      setIsHydrated(true);
     }
-  }, [language]);
+  }, []);
 
   const setSelectedState = (newState: string) => {
     setSelectedStateState(newState);
     const districts = getDistrictsForState(newState);
-    if (!districts.includes(selectedDistrict)) {
-      setSelectedDistrictState(districts[0] || '');
+    const newDist = districts.includes(selectedDistrict) ? selectedDistrict : districts[0] || '';
+    setSelectedDistrictState(newDist);
+    try {
+      localStorage.setItem(STATE_STORAGE_KEY, newState);
+      localStorage.setItem(DISTRICT_STORAGE_KEY, newDist);
+    } catch {
+      // ignore
     }
   };
 
   const setSelectedDistrict = (newDistrict: string) => {
     setSelectedDistrictState(newDistrict);
+    try {
+      localStorage.setItem(DISTRICT_STORAGE_KEY, newDistrict);
+    } catch {
+      // ignore
+    }
   };
 
-  const availableStates = getStatesForLanguage(language);
+  // Called ONLY during initial onboarding recommendation if user hasn't explicitly set location
+  const suggestLocationForLanguage = (lang: string) => {
+    // Only suggest if not already saved in localStorage
+    if (!localStorage.getItem(STATE_STORAGE_KEY)) {
+      let state = 'Kerala';
+      if (lang === 'kn') state = 'Karnataka';
+      else if (lang === 'te') state = 'Andhra Pradesh';
+      else if (lang === 'ta') state = 'Tamil Nadu';
+      else if (lang === 'hi') state = 'Uttar Pradesh';
+      else if (lang === 'ml') state = 'Kerala';
+      const dist = getDefaultDistrictForState(state);
+      setSelectedState(state);
+      setSelectedDistrict(dist);
+    }
+  };
+
+  const availableStates = ALL_INDIAN_STATES;
   const availableDistricts = getDistrictsForState(selectedState);
 
   return (
@@ -67,6 +98,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         setSelectedDistrict,
         availableStates,
         availableDistricts,
+        suggestLocationForLanguage,
       }}
     >
       {children}

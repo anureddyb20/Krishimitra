@@ -31,11 +31,21 @@ export default function SettingsPage() {
   } = useTranslation();
   const { selectedState, selectedDistrict } = useLocation();
   const [savedNotice, setSavedNotice] = useState(false);
+  const [resetNotice, setResetNotice] = useState(false);
 
   const handleLanguageSelect = (code: SupportedLanguage) => {
     setLanguage(code);
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 2500);
+  };
+
+  const handleResetAllData = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('krishimitra_crops');
+      localStorage.removeItem('krishimitra_tasks');
+      setResetNotice(true);
+      setTimeout(() => setResetNotice(false), 3000);
+    }
   };
 
   return (
@@ -72,6 +82,13 @@ export default function SettingsPage() {
         <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-950 text-xs font-medium flex items-center gap-2 animate-in fade-in">
           <Check className="w-4 h-4 text-emerald-700" />
           Language and regional location updated and saved to your device.
+        </div>
+      )}
+
+      {resetNotice && (
+        <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-950 text-xs font-medium flex items-center gap-2 animate-in fade-in">
+          <RotateCcw className="w-4 h-4 text-amber-700" />
+          Demonstration crops and task records reset to default state.
         </div>
       )}
 
@@ -202,6 +219,35 @@ export default function SettingsPage() {
             </div>
             <Badge variant="demo" size="sm">Phase 5 (PWA)</Badge>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. Reset Demo Data */}
+      <Card className="border-stone-200">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <RotateCcw className="w-5 h-5 text-stone-500" />
+            <CardTitle className="text-base text-stone-800">
+              Demo Data Management
+            </CardTitle>
+          </div>
+          <p className="text-xs text-stone-500 mt-1">
+            Clear locally cached mock crop entries and farm task checklists to test a clean onboarding state.
+          </p>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between">
+          <span className="text-xs text-stone-600">
+            Reset customized crops and task completions to default mock set.
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetAllData}
+            className="text-stone-700 hover:text-rose-700 hover:border-rose-300 cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+            Reset Demo Data
+          </Button>
         </CardContent>
       </Card>
     </div>
