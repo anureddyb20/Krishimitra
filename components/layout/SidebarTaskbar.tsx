@@ -42,8 +42,10 @@ export function SidebarTaskbar() {
     setMounted(true);
   }, []);
 
-  const isOnboarded = Boolean(user && profile?.onboarding_completed);
-  const isPendingOnboarding = Boolean(user && !profile?.onboarding_completed);
+  const currentUser = mounted ? user : null;
+  const currentProfile = mounted ? profile : null;
+  const isOnboarded = Boolean(currentUser && currentProfile?.onboarding_completed);
+  const isPendingOnboarding = Boolean(currentUser && !currentProfile?.onboarding_completed);
 
   // Dynamic Navigation Items based on user authentication and onboarding state
   let navItems: Array<{
@@ -53,7 +55,7 @@ export function SidebarTaskbar() {
     badge?: string;
   }> = [];
 
-  if (!user) {
+  if (!currentUser) {
     // Unauthenticated: Only Home and Auth links
     navItems = [
       { href: '/', label: t('nav.home', 'Home'), icon: Home },
@@ -172,8 +174,8 @@ export function SidebarTaskbar() {
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         <div className={cn('px-3 mb-2', collapsed && 'hidden')}>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
-            {!user
+          <span suppressHydrationWarning className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
+            {!currentUser
               ? 'Welcome to KrishiMitra'
               : isPendingOnboarding
               ? 'Onboarding Steps'

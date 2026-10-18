@@ -211,7 +211,7 @@ function RegisterForm() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    placeholder="e.g. Anand Kumar / ആനന്ദ് കുമാർ"
+                    placeholder="e.g. Anand Kumar"
                     className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-stone-900 placeholder:text-stone-400"
                   />
                 </div>

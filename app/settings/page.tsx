@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useLocation } from '@/lib/LocationContext';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAuth, DEMO_USER_ID } from '@/lib/auth/AuthContext';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -363,7 +363,6 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-            </div>
 
             <div className="pt-2 flex justify-end">
               <Button

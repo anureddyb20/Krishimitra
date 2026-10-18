@@ -1504,7 +1504,6 @@ export default function MyFarmPage() {
                 className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
               />
             </div>
-          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>

@@ -8,6 +8,7 @@ import { Profile } from '@/types/database';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useLocation } from '@/lib/LocationContext';
 import { SupportedLanguage } from '@/types/i18n';
+import { sanitizeFarmerName } from '@/lib/utils';
 
 export const DEMO_USER_ID = 'demo-farmer-id-kerala';
 export const DEMO_USER_STORAGE = 'krishimitra_demo_user';
@@ -30,8 +31,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { setLanguage } = useTranslation();
-  const { setSelectedDistrict, setSelectedState } = useLocation();
+  const { setLanguage, language } = useTranslation();
+  const { selectedState, selectedDistrict, setSelectedDistrict, setSelectedState } = useLocation();
 
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -45,6 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const raw = localStorage.getItem(DEMO_PROFILE_STORAGE);
         if (raw) {
           const parsed = JSON.parse(raw) as Profile;
+          // Strip any residual Malayalam text from demo profile if in English/non-Malayalam
+          if (parsed.full_name && /[\u0D00-\u0D7F]/.test(parsed.full_name)) {
+            parsed.full_name = sanitizeFarmerName(parsed.full_name, 'en');
+            try {
+              localStorage.setItem(DEMO_PROFILE_STORAGE, JSON.stringify(parsed));
+            } catch {}
+          }
           setProfile(parsed);
           return parsed;
         }
