@@ -288,7 +288,7 @@ export function getDefaultStateForLanguage(lang: SupportedLanguage): string {
       return 'Uttar Pradesh';
     case 'en':
     default:
-      return 'Karnataka';
+      return 'Kerala';
   }
 }
 
@@ -298,5 +298,5 @@ export function getDistrictsForState(stateName: string): string[] {
 
 export function getDefaultDistrictForState(stateName: string): string {
   const districts = getDistrictsForState(stateName);
-  return districts[0] || 'Mandya';
+  return districts[0] || (stateName === 'Kerala' ? 'Wayanad' : 'Mandya');
 }

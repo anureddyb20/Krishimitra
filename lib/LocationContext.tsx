@@ -18,6 +18,7 @@ interface LocationContextType {
   availableStates: string[];
   availableDistricts: string[];
   suggestLocationForLanguage: (lang: string) => void;
+  isHydrated: boolean;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -99,6 +100,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         availableStates,
         availableDistricts,
         suggestLocationForLanguage,
+        isHydrated,
       }}
     >
       {children}

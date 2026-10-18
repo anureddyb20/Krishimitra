@@ -89,7 +89,7 @@ export function MarketPricesCard() {
           >
             <div>
               <h4 className="text-sm font-bold text-stone-900">{item.name}</h4>
-              <p className="text-xs text-stone-500 truncate max-w-[200px]">{item.market}</p>
+              <p suppressHydrationWarning className="text-xs text-stone-500 truncate max-w-[200px]">{item.market}</p>
             </div>
 
             <div className="text-right">

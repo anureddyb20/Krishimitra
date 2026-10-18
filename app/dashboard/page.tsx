@@ -130,7 +130,7 @@ export default function DashboardPage() {
             <span className="font-bold text-stone-900 block truncate max-w-[150px]">
               {farmerName}
             </span>
-            <span className="text-emerald-700 font-medium flex items-center gap-1">
+            <span suppressHydrationWarning className="text-emerald-700 font-medium flex items-center gap-1">
               <MapPin className="w-3 h-3" />
               {farmerDistrict}, Kerala
             </span>

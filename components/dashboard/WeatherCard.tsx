@@ -46,7 +46,7 @@ export function WeatherCard() {
               {t('dashboard.weather_card_badge', 'Simulated')}
             </Badge>
           </div>
-          <p className="text-xs text-stone-500 mt-0.5">
+          <p suppressHydrationWarning className="text-xs text-stone-500 mt-0.5">
             Microclimate agro-meteorology for {selectedDistrict}, {selectedState}
           </p>
         </div>

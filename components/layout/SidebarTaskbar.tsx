@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -30,6 +30,11 @@ export function SidebarTaskbar() {
   const { t } = useTranslation();
   const { selectedState, selectedDistrict } = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     { href: '/', label: t('nav.home', 'Home'), icon: Home },
@@ -115,8 +120,11 @@ export function SidebarTaskbar() {
               <span className="text-[10px] font-semibold text-emerald-700 uppercase block tracking-wider">
                 Active Region
               </span>
-              <span className="text-xs font-bold text-emerald-950 truncate block">
-                {selectedDistrict}, {selectedState}
+              <span
+                suppressHydrationWarning
+                className="text-xs font-bold text-emerald-950 truncate block"
+              >
+                {mounted ? `${selectedDistrict}, ${selectedState}` : 'Wayanad, Kerala'}
               </span>
             </div>
           </div>
