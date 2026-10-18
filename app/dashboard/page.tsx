@@ -114,6 +114,7 @@ export default function DashboardPage() {
   // Display Name and Initials
   const farmerName = profile?.full_name || user?.email?.split('@')[0] || 'Demonstration Farmer';
   const farmerDistrict = profile?.district || selectedDistrict;
+  const farmerState = profile?.state || selectedState;
   const initials = farmerName
     .split(' ')
     .map((n) => n[0])
@@ -156,7 +157,7 @@ export default function DashboardPage() {
             </span>
             <span suppressHydrationWarning className="text-emerald-700 font-medium flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              {farmerDistrict}, Kerala
+              {farmerDistrict}, {farmerState}
             </span>
           </div>
         </div>

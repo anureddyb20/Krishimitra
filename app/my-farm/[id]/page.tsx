@@ -126,7 +126,7 @@ function FarmDetailContent({ farmId }: { farmId: string }) {
             </div>
             <p className="text-xs text-stone-500 mt-1 flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-emerald-700" />
-              {farm.village_or_town ? `${farm.village_or_town}, ` : ''}{farm.district} District, Kerala
+              {farm.village_or_town ? `${farm.village_or_town}, ` : ''}{farm.district} District, {farm.state || 'India'}
             </p>
           </div>
 

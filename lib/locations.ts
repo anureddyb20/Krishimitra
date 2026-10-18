@@ -288,7 +288,7 @@ export function getDefaultStateForLanguage(lang: SupportedLanguage): string {
       return 'Uttar Pradesh';
     case 'en':
     default:
-      return 'Kerala';
+      return 'Karnataka';
   }
 }
 

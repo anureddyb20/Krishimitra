@@ -1,6 +1,8 @@
 -- ========================================================
--- KrishiMitra — Database Schema (Phase 2 Master Schema)
+-- KrishiMitra — Master Database Schema (Pan-India Agriculture)
 -- Target: Supabase PostgreSQL with RLS and Auth Triggers
+-- Supports all Indian States & Districts (Karnataka, Andhra Pradesh,
+-- Telangana, Tamil Nadu, Kerala, Maharashtra, UP, Punjab, etc.)
 -- ========================================================
 
 -- Enable required extensions
@@ -25,14 +27,10 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
-  preferred_language TEXT NOT NULL DEFAULT 'ml'
-    CHECK (preferred_language IN ('ml', 'en', 'hi', 'kn', 'ta', 'te')),
-  district TEXT
-    CHECK (district IS NULL OR district IN (
-      'Alappuzha', 'Ernakulam', 'Idukki', 'Kannur', 'Kasaragod',
-      'Kollam', 'Kottayam', 'Kozhikode', 'Malappuram', 'Palakkad',
-      'Pathanamthitta', 'Thiruvananthapuram', 'Thrissur', 'Wayanad'
-    )),
+  preferred_language TEXT NOT NULL DEFAULT 'en'
+    CHECK (preferred_language IN ('en', 'kn', 'te', 'ta', 'ml', 'hi')),
+  state TEXT NOT NULL DEFAULT 'Karnataka',
+  district TEXT,
   village_or_town TEXT,
   phone_number TEXT,
   onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
@@ -54,19 +52,22 @@ BEGIN
     id,
     full_name,
     preferred_language,
+    state,
     district,
     onboarding_completed
   )
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    COALESCE(NEW.raw_user_meta_data->>'preferred_language', 'ml'),
+    COALESCE(NEW.raw_user_meta_data->>'preferred_language', 'en'),
+    COALESCE(NEW.raw_user_meta_data->>'state', 'Karnataka'),
     NULLIF(NEW.raw_user_meta_data->>'district', ''),
     FALSE
   )
   ON CONFLICT (id) DO UPDATE SET
     full_name = EXCLUDED.full_name,
     preferred_language = EXCLUDED.preferred_language,
+    state = EXCLUDED.state,
     updated_at = NOW()
   WHERE public.profiles.full_name IS NULL OR public.profiles.full_name = '';
 
@@ -81,22 +82,18 @@ CREATE TRIGGER on_auth_user_created
 
 -- --------------------------------------------------------
 -- Table B: farms
--- Multiple farms per farmer
+-- Multiple farms per farmer across any Indian state/district
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.farms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   farm_name TEXT NOT NULL,
-  district TEXT NOT NULL
-    CHECK (district IN (
-      'Alappuzha', 'Ernakulam', 'Idukki', 'Kannur', 'Kasaragod',
-      'Kollam', 'Kottayam', 'Kozhikode', 'Malappuram', 'Palakkad',
-      'Pathanamthitta', 'Thiruvananthapuram', 'Thrissur', 'Wayanad'
-    )),
+  state TEXT NOT NULL DEFAULT 'Karnataka',
+  district TEXT NOT NULL,
   village_or_town TEXT,
   area_value NUMERIC(10, 2) NOT NULL CHECK (area_value > 0),
   area_unit TEXT NOT NULL DEFAULT 'acres'
-    CHECK (area_unit IN ('acres', 'cents', 'hectares', 'sq_ft', 'sq_m')),
+    CHECK (area_unit IN ('acres', 'cents', 'hectares', 'sq_ft', 'sq_m', 'guntas', 'bigha')),
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -121,7 +118,7 @@ CREATE TABLE IF NOT EXISTS public.farm_plots (
   plot_name TEXT NOT NULL,
   area_value NUMERIC(10, 2) NOT NULL CHECK (area_value > 0),
   area_unit TEXT NOT NULL DEFAULT 'acres'
-    CHECK (area_unit IN ('acres', 'cents', 'hectares', 'sq_ft', 'sq_m')),
+    CHECK (area_unit IN ('acres', 'cents', 'hectares', 'sq_ft', 'sq_m', 'guntas', 'bigha')),
   soil_type TEXT,
   irrigation_type TEXT,
   notes TEXT,
@@ -161,7 +158,7 @@ CREATE TABLE IF NOT EXISTS public.farm_crops (
     )),
   area_value NUMERIC(10, 2) CHECK (area_value IS NULL OR area_value > 0),
   area_unit TEXT DEFAULT 'acres'
-    CHECK (area_unit IN ('acres', 'cents', 'hectares', 'sq_ft', 'sq_m')),
+    CHECK (area_unit IN ('acres', 'cents', 'hectares', 'sq_ft', 'sq_m', 'guntas', 'bigha')),
   health_status TEXT NOT NULL DEFAULT 'healthy'
     CHECK (health_status IN ('healthy', 'attention', 'critical')),
   notes TEXT,

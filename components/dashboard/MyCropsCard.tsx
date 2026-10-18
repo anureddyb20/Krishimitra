@@ -45,7 +45,7 @@ interface CropData {
 const DEMO_CROPS: CropData[] = [
   {
     id: 'crop_1',
-    name: 'Nendran Banana (നേന്ത്രവാഴ)',
+    name: 'Banana (Nendran)',
     variety: 'Neduneran Hybrid',
     acres: 2.5,
     stage: 'Bunch Emergence',
@@ -60,7 +60,7 @@ const DEMO_CROPS: CropData[] = [
   },
   {
     id: 'crop_2',
-    name: 'Coconut Palm (തെങ്ങ്)',
+    name: 'Coconut Palm',
     variety: 'West Coast Tall (WCT)',
     acres: 4.0,
     stage: 'Peak Bearing',
@@ -75,7 +75,7 @@ const DEMO_CROPS: CropData[] = [
   },
   {
     id: 'crop_3',
-    name: 'Black Pepper (കുരുമുളക്)',
+    name: 'Black Pepper',
     variety: 'Panniyur-1',
     acres: 1.5,
     stage: 'Berry Development',
@@ -90,7 +90,7 @@ const DEMO_CROPS: CropData[] = [
   },
   {
     id: 'crop_4',
-    name: 'Wetland Paddy (നെല്ല്)',
+    name: 'Wetland Paddy (Rice)',
     variety: 'Uma / MO-16',
     acres: 2.0,
     stage: 'Panicle Initiation',

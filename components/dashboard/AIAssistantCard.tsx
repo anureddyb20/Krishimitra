@@ -87,7 +87,7 @@ export function AIAssistantCard() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t(
               'dashboard.ai_input_placeholder',
-              'Type or ask a farming question (e.g. കുരുമുളകിലെ ദ്രുതവാട്ടം...)'
+              'Type or ask a farming question (e.g. crop health, fertilizer schedule, mandi prices...)'
             )}
             className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-950/80 border border-emerald-700/80 text-white placeholder-emerald-300/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
           />

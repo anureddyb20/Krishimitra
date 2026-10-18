@@ -139,7 +139,7 @@ export function WelcomeLanguageModal() {
         <div className="space-y-1">
           <label className="text-xs font-semibold text-stone-700 flex items-center gap-1.5">
             <User className="w-3.5 h-3.5 text-stone-400" />
-            <span>Farmer Name (Optional / ആവശ്യമെങ്കിൽ):</span>
+            <span>{selectedLanguage === 'ml' ? 'കർഷകന്റെ പേര് (ആവശ്യമെങ്കിൽ):' : 'Farmer Name (Optional):'}</span>
           </label>
           <input
             type="text"
@@ -148,7 +148,7 @@ export function WelcomeLanguageModal() {
               setFarmerName(e.target.value);
               if (nameError) setNameError('');
             }}
-            placeholder="e.g. Ramesh Kumar / അനിൽ കുമാർ"
+            placeholder={selectedLanguage === 'ml' ? 'ഉദാ. രമേഷ് കുമാർ' : 'e.g. Ramesh Kumar'}
             className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
           />
           {nameError && (

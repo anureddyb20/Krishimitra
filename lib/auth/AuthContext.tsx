@@ -75,9 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLanguage(data.preferred_language as SupportedLanguage);
         }
 
-        // Sync district if set
+        // Sync state & district if set
+        if (data.state) {
+          setSelectedState(data.state);
+        }
         if (data.district) {
-          setSelectedState('Kerala');
           setSelectedDistrict(data.district);
         }
 
@@ -101,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: DEMO_USER_ID,
       email,
       app_metadata: { provider: 'demo' },
-      user_metadata: { full_name: 'Anil Kumar (അനിൽ കുമാർ)' },
+      user_metadata: { full_name: 'Anil Kumar' },
       aud: 'authenticated',
       created_at: new Date().toISOString(),
     };
@@ -114,10 +116,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const activeProfile: Profile = existingProfile || {
       id: DEMO_USER_ID,
-      full_name: 'Anil Kumar (അനിൽ കുമാർ)',
-      preferred_language: 'ml',
-      district: 'Wayanad',
-      village_or_town: 'Meppadi',
+      full_name: 'Anil Kumar',
+      preferred_language: 'en',
+      state: selectedState || 'Karnataka',
+      district: selectedDistrict || 'Belagavi',
+      village_or_town: 'Gokak',
       phone_number: '+91 98470 12345',
       onboarding_completed: false, // Starts as false to allow the user to test land division onboarding
       created_at: new Date().toISOString(),
@@ -135,8 +138,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (activeProfile.preferred_language) {
       setLanguage(activeProfile.preferred_language as SupportedLanguage);
     }
+    if (activeProfile.state) {
+      setSelectedState(activeProfile.state);
+    }
     if (activeProfile.district) {
-      setSelectedState('Kerala');
       setSelectedDistrict(activeProfile.district);
     }
 
@@ -149,10 +154,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user.id === DEMO_USER_ID) {
       const current = profile || {
         id: DEMO_USER_ID,
-        full_name: 'Anil Kumar (അനിൽ കുമാർ)',
-        preferred_language: 'ml',
-        district: 'Wayanad',
-        village_or_town: 'Meppadi',
+        full_name: 'Anil Kumar',
+        preferred_language: 'en',
+        state: selectedState || 'Karnataka',
+        district: selectedDistrict || 'Belagavi',
+        village_or_town: 'Gokak',
         phone_number: '+91 98470 12345',
         onboarding_completed: true,
         created_at: new Date().toISOString(),

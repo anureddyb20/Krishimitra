@@ -65,7 +65,7 @@ export function LanguageSelector({ variant = 'header', className }: LanguageSele
           className="absolute right-0 mt-2 w-72 origin-top-right rounded-2xl bg-white p-2 shadow-xl border border-stone-200 ring-1 ring-black/5 z-50 animate-in fade-in zoom-in-95 duration-150"
         >
           <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-stone-500 border-b border-stone-100 mb-1">
-            Choose Language / ഭാഷ തിരഞ്ഞെടുക്കുക
+            {language === 'ml' ? 'ഭാഷ തിരഞ്ഞെടുക്കുക' : 'Choose Interface Language'}
           </div>
 
           <div className="space-y-1">

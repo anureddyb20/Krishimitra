@@ -6,25 +6,12 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type KeralaDistrict =
-  | 'Alappuzha'
-  | 'Ernakulam'
-  | 'Idukki'
-  | 'Kannur'
-  | 'Kasaragod'
-  | 'Kollam'
-  | 'Kottayam'
-  | 'Kozhikode'
-  | 'Malappuram'
-  | 'Palakkad'
-  | 'Pathanamthitta'
-  | 'Thiruvananthapuram'
-  | 'Thrissur'
-  | 'Wayanad';
+// Deprecated alias for backwards compatibility; now any Indian district is supported
+export type KeralaDistrict = string;
 
 export type SupportedLanguage = 'ml' | 'en' | 'hi' | 'kn' | 'ta' | 'te';
 
-export type AreaUnit = 'acres' | 'cents' | 'hectares' | 'sq_ft' | 'sq_m';
+export type AreaUnit = 'acres' | 'cents' | 'hectares' | 'sq_ft' | 'sq_m' | 'guntas' | 'bigha';
 
 export type GrowthStage =
   | 'Sowing'
@@ -41,7 +28,8 @@ export type Profile = {
   id: string;
   full_name: string | null;
   preferred_language: SupportedLanguage;
-  district: KeralaDistrict | null;
+  state: string;
+  district: string | null;
   village_or_town: string | null;
   phone_number: string | null;
   onboarding_completed: boolean;
@@ -53,7 +41,8 @@ export type Farm = {
   id: string;
   owner_id: string;
   farm_name: string;
-  district: KeralaDistrict;
+  state: string;
+  district: string;
   village_or_town: string | null;
   area_value: number;
   area_unit: AreaUnit;
@@ -102,7 +91,8 @@ export type Database = {
           id: string;
           full_name: string | null;
           preferred_language: SupportedLanguage;
-          district: KeralaDistrict | null;
+          state: string;
+          district: string | null;
           village_or_town: string | null;
           phone_number: string | null;
           onboarding_completed: boolean;
@@ -113,7 +103,8 @@ export type Database = {
           id: string;
           full_name?: string | null;
           preferred_language?: SupportedLanguage;
-          district?: KeralaDistrict | null;
+          state?: string;
+          district?: string | null;
           village_or_town?: string | null;
           phone_number?: string | null;
           onboarding_completed?: boolean;
@@ -124,7 +115,8 @@ export type Database = {
           id?: string;
           full_name?: string | null;
           preferred_language?: SupportedLanguage;
-          district?: KeralaDistrict | null;
+          state?: string;
+          district?: string | null;
           village_or_town?: string | null;
           phone_number?: string | null;
           onboarding_completed?: boolean;
@@ -146,7 +138,8 @@ export type Database = {
           id: string;
           owner_id: string;
           farm_name: string;
-          district: KeralaDistrict;
+          state: string;
+          district: string;
           village_or_town: string | null;
           area_value: number;
           area_unit: AreaUnit;
@@ -158,7 +151,8 @@ export type Database = {
           id?: string;
           owner_id: string;
           farm_name: string;
-          district: KeralaDistrict;
+          state?: string;
+          district: string;
           village_or_town?: string | null;
           area_value: number;
           area_unit?: AreaUnit;
@@ -170,7 +164,8 @@ export type Database = {
           id?: string;
           owner_id?: string;
           farm_name?: string;
-          district?: KeralaDistrict;
+          state?: string;
+          district?: string;
           village_or_town?: string | null;
           area_value?: number;
           area_unit?: AreaUnit;

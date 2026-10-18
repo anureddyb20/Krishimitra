@@ -24,8 +24,8 @@ interface LocationContextType {
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
 
 export function LocationProvider({ children }: { children: React.ReactNode }) {
-  const [selectedState, setSelectedStateState] = useState<string>('Kerala');
-  const [selectedDistrict, setSelectedDistrictState] = useState<string>('Wayanad');
+  const [selectedState, setSelectedStateState] = useState<string>('Karnataka');
+  const [selectedDistrict, setSelectedDistrictState] = useState<string>('Belagavi');
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Restore saved state and district from localStorage

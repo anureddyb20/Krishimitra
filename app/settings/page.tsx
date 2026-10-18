@@ -29,24 +29,7 @@ import { Button } from '@/components/ui/Button';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { LocationSelector } from '@/components/common/LocationSelector';
 import { SupportedLanguage } from '@/types/i18n';
-import { KeralaDistrict } from '@/types/database';
 
-const KERALA_DISTRICTS: KeralaDistrict[] = [
-  'Alappuzha',
-  'Ernakulam',
-  'Idukki',
-  'Kannur',
-  'Kasaragod',
-  'Kollam',
-  'Kottayam',
-  'Kozhikode',
-  'Malappuram',
-  'Palakkad',
-  'Pathanamthitta',
-  'Thiruvananthapuram',
-  'Thrissur',
-  'Wayanad',
-];
 
 export default function SettingsPage() {
   const {
@@ -56,13 +39,19 @@ export default function SettingsPage() {
     supportedLanguages,
     setIsOnboardingOpen,
   } = useTranslation();
-  const { selectedState, selectedDistrict, setSelectedDistrict, setSelectedState } = useLocation();
-  const { user, profile, isConfigured, refreshProfile } = useAuth();
+  const {
+    selectedState,
+    selectedDistrict,
+    setSelectedDistrict,
+    setSelectedState,
+    availableStates,
+    availableDistricts,
+  } = useLocation();
+  const { user, profile, isConfigured, refreshProfile, updateProfile } = useAuth();
 
   // Profile Form State
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [selectedKeralaDistrict, setSelectedKeralaDistrict] = useState<KeralaDistrict>('Wayanad');
   const [village, setVillage] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -75,8 +64,11 @@ export default function SettingsPage() {
     if (profile) {
       if (profile.full_name) setFullName(profile.full_name);
       if (profile.phone_number) setPhoneNumber(profile.phone_number);
+      if (profile.state && availableStates.includes(profile.state)) {
+        setSelectedState(profile.state);
+      }
       if (profile.district) {
-        setSelectedKeralaDistrict(profile.district);
+        setSelectedDistrict(profile.district);
       }
       if (profile.village_or_town) setVillage(profile.village_or_town);
     }
@@ -108,26 +100,35 @@ export default function SettingsPage() {
       return;
     }
 
-    if (!isConfigured) {
-      setProfileMessage({
-        type: 'error',
-        text: t('auth.unconfigured_notice', 'Supabase credentials are not configured yet.'),
-      });
-      return;
-    }
-
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      setProfileMessage({
-        type: 'error',
-        text: 'Database connection is unavailable.',
-      });
-      return;
-    }
-
     setIsSavingProfile(true);
 
     try {
+      if (!isConfigured || user.id === DEMO_USER_ID) {
+        await updateProfile({
+          full_name: fullName.trim(),
+          phone_number: phoneNumber.trim() || null,
+          preferred_language: language,
+          state: selectedState,
+          district: selectedDistrict,
+          village_or_town: village.trim() || null,
+        });
+        setProfileMessage({
+          type: 'success',
+          text: t('profile.updated_msg', 'Your profile information has been updated successfully.'),
+        });
+        setIsSavingProfile(false);
+        return;
+      }
+
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        setProfileMessage({
+          type: 'error',
+          text: 'Database connection is unavailable.',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -135,7 +136,8 @@ export default function SettingsPage() {
           full_name: fullName.trim(),
           phone_number: phoneNumber.trim() || null,
           preferred_language: language,
-          district: selectedKeralaDistrict,
+          state: selectedState,
+          district: selectedDistrict,
           village_or_town: village.trim() || null,
           updated_at: new Date().toISOString(),
         });
@@ -143,10 +145,6 @@ export default function SettingsPage() {
       if (error) {
         throw error;
       }
-
-      // Update location context
-      setSelectedState('Kerala');
-      setSelectedDistrict(selectedKeralaDistrict);
 
       await refreshProfile();
       setProfileMessage({
@@ -196,7 +194,7 @@ export default function SettingsPage() {
           <p className="text-sm text-stone-600 mt-1">
             {t(
               'profile.subtitle',
-              'Update your personal information, preferred language, and regional Kerala location'
+              'Update your personal information, preferred language, and regional farm location'
             )}
           </p>
         </div>
@@ -305,25 +303,48 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
-                  {t('profile.district', 'Kerala District')} *
+                  {t('profile.state', 'State in India')} *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <select
-                    value={selectedKeralaDistrict}
-                    onChange={(e) => setSelectedKeralaDistrict(e.target.value as KeralaDistrict)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-stone-900 cursor-pointer"
+                    value={selectedState}
+                    onChange={(e) => setSelectedState(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-stone-900 cursor-pointer font-medium"
                   >
-                    {KERALA_DISTRICTS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
+                    {availableStates.map((st) => (
+                      <option key={st} value={st}>
+                        {st}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  {t('profile.district', 'District')} *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <select
+                    value={selectedDistrict}
+                    onChange={(e) => setSelectedDistrict(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-stone-900 cursor-pointer font-medium"
+                  >
+                    {availableDistricts.map((d) => (
+                      <option key={d} value={d}>
+                        {d} District
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
 
               <div>
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">

@@ -27,31 +27,16 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { useLocation } from '@/lib/LocationContext';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { Farm, FarmPlot, FarmCrop, KeralaDistrict, AreaUnit, GrowthStage, HealthStatus } from '@/types/database';
+import { ALL_INDIAN_STATES, getDistrictsForState } from '@/lib/locations';
+import { Farm, FarmPlot, FarmCrop, AreaUnit, GrowthStage, HealthStatus } from '@/types/database';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { AlertBanner } from '@/components/ui/AlertBanner';
-
-const KERALA_DISTRICTS: KeralaDistrict[] = [
-  'Alappuzha',
-  'Ernakulam',
-  'Idukki',
-  'Kannur',
-  'Kasaragod',
-  'Kollam',
-  'Kottayam',
-  'Kozhikode',
-  'Malappuram',
-  'Palakkad',
-  'Pathanamthitta',
-  'Thiruvananthapuram',
-  'Thrissur',
-  'Wayanad',
-];
 
 const GROWTH_STAGES: GrowthStage[] = [
   'Sowing',
@@ -68,6 +53,7 @@ const HEALTH_STATUSES: HealthStatus[] = ['healthy', 'attention', 'critical'];
 export default function MyFarmPage() {
   const { t } = useTranslation();
   const { user, isConfigured } = useAuth();
+  const { selectedState, selectedDistrict } = useLocation();
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'farms' | 'crops'>('farms');
@@ -106,7 +92,8 @@ export default function MyFarmPage() {
   // Farm Form State
   const [farmForm, setFarmForm] = useState({
     farm_name: '',
-    district: 'Wayanad' as KeralaDistrict,
+    state: selectedState || 'Karnataka',
+    district: selectedDistrict || 'Belagavi',
     village_or_town: '',
     area_value: '2.5',
     area_unit: 'acres' as AreaUnit,
@@ -231,7 +218,8 @@ export default function MyFarmPage() {
     setEditingFarm(null);
     setFarmForm({
       farm_name: '',
-      district: 'Wayanad',
+      state: selectedState || 'Karnataka',
+      district: selectedDistrict || 'Belagavi',
       village_or_town: '',
       area_value: '2.5',
       area_unit: 'acres',
@@ -244,6 +232,7 @@ export default function MyFarmPage() {
     setEditingFarm(farm);
     setFarmForm({
       farm_name: farm.farm_name,
+      state: farm.state || selectedState || 'Karnataka',
       district: farm.district,
       village_or_town: farm.village_or_town || '',
       area_value: farm.area_value.toString(),
@@ -256,8 +245,6 @@ export default function MyFarmPage() {
   const handleSubmitFarm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
 
     if (!farmForm.farm_name.trim()) {
       alert('Farm name is required');
@@ -269,6 +256,60 @@ export default function MyFarmPage() {
       return;
     }
 
+    if (!isConfigured || user.id === 'demo-farmer-id-kerala') {
+      setIsSubmitting(true);
+      try {
+        const rawFarms = localStorage.getItem('krishimitra_demo_farms');
+        let currentFarms: Farm[] = rawFarms ? JSON.parse(rawFarms) : [];
+        if (editingFarm) {
+          currentFarms = currentFarms.map((f) =>
+            f.id === editingFarm.id
+              ? {
+                  ...f,
+                  farm_name: farmForm.farm_name.trim(),
+                  state: farmForm.state,
+                  district: farmForm.district,
+                  village_or_town: farmForm.village_or_town.trim() || null,
+                  area_value: area,
+                  area_unit: farmForm.area_unit,
+                  notes: farmForm.notes.trim() || null,
+                  updated_at: new Date().toISOString(),
+                }
+              : f
+          );
+        } else {
+          const newF: Farm = {
+            id: 'demo-farm-' + Date.now(),
+            owner_id: user.id,
+            farm_name: farmForm.farm_name.trim(),
+            state: farmForm.state,
+            district: farmForm.district,
+            village_or_town: farmForm.village_or_town.trim() || null,
+            area_value: area,
+            area_unit: farmForm.area_unit,
+            notes: farmForm.notes.trim() || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          currentFarms.unshift(newF);
+          if (!selectedFarmId) setSelectedFarmId(newF.id);
+        }
+        localStorage.setItem('krishimitra_demo_farms', JSON.stringify(currentFarms));
+        setFarms(currentFarms);
+        setIsFarmModalOpen(false);
+        setSuccessBanner('Farm saved successfully!');
+        setTimeout(() => setSuccessBanner(''), 3000);
+      } catch (err: any) {
+        alert(err.message || 'Error saving farm');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+
     setIsSubmitting(true);
     try {
       if (editingFarm) {
@@ -277,6 +318,7 @@ export default function MyFarmPage() {
           .from('farms')
           .update({
             farm_name: farmForm.farm_name.trim(),
+            state: farmForm.state,
             district: farmForm.district,
             village_or_town: farmForm.village_or_town.trim() || null,
             area_value: area,
@@ -296,6 +338,7 @@ export default function MyFarmPage() {
           .insert({
             owner_id: user.id,
             farm_name: farmForm.farm_name.trim(),
+            state: farmForm.state,
             district: farmForm.district,
             village_or_town: farmForm.village_or_town.trim() || null,
             area_value: area,
@@ -353,8 +396,6 @@ export default function MyFarmPage() {
   const handleSubmitPlot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
 
     if (!plotForm.farm_id) {
       alert('Please select a farm');
@@ -369,6 +410,59 @@ export default function MyFarmPage() {
       alert('Enter a valid area greater than 0');
       return;
     }
+
+    if (!isConfigured || user.id === 'demo-farmer-id-kerala') {
+      setIsSubmitting(true);
+      try {
+        const rawPlots = localStorage.getItem('krishimitra_demo_plots');
+        let currentPlots: FarmPlot[] = rawPlots ? JSON.parse(rawPlots) : [];
+        if (editingPlot) {
+          currentPlots = currentPlots.map((p) =>
+            p.id === editingPlot.id
+              ? {
+                  ...p,
+                  farm_id: plotForm.farm_id,
+                  plot_name: plotForm.plot_name.trim(),
+                  area_value: area,
+                  area_unit: plotForm.area_unit,
+                  soil_type: plotForm.soil_type.trim() || null,
+                  irrigation_type: plotForm.irrigation_type.trim() || null,
+                  notes: plotForm.notes.trim() || null,
+                  updated_at: new Date().toISOString(),
+                }
+              : p
+          );
+        } else {
+          const newP: FarmPlot = {
+            id: 'demo-plot-' + Date.now(),
+            farm_id: plotForm.farm_id,
+            owner_id: user.id,
+            plot_name: plotForm.plot_name.trim(),
+            area_value: area,
+            area_unit: plotForm.area_unit,
+            soil_type: plotForm.soil_type.trim() || null,
+            irrigation_type: plotForm.irrigation_type.trim() || null,
+            notes: plotForm.notes.trim() || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          currentPlots.unshift(newP);
+        }
+        localStorage.setItem('krishimitra_demo_plots', JSON.stringify(currentPlots));
+        setPlots(currentPlots);
+        setIsPlotModalOpen(false);
+        setSuccessBanner('Plot saved successfully!');
+        setTimeout(() => setSuccessBanner(''), 3000);
+      } catch (err: any) {
+        alert(err.message || 'Error saving plot.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
 
     setIsSubmitting(true);
     try {
@@ -457,9 +551,6 @@ export default function MyFarmPage() {
   const handleSubmitCrop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
-
     if (!cropForm.farm_id) {
       alert('Farm is required');
       return;
@@ -479,6 +570,67 @@ export default function MyFarmPage() {
     }
 
     const areaVal = cropForm.area_value ? parseFloat(cropForm.area_value) : null;
+
+    if (!isConfigured || user.id === 'demo-farmer-id-kerala') {
+      setIsSubmitting(true);
+      try {
+        const rawCrops = localStorage.getItem('krishimitra_demo_crops');
+        let currentCrops: FarmCrop[] = rawCrops ? JSON.parse(rawCrops) : [];
+        if (editingCrop) {
+          currentCrops = currentCrops.map((c) =>
+            c.id === editingCrop.id
+              ? {
+                  ...c,
+                  farm_id: cropForm.farm_id,
+                  plot_id: cropForm.plot_id || null,
+                  crop_name: cropForm.crop_name.trim(),
+                  crop_variety: cropForm.crop_variety.trim() || null,
+                  growth_stage: cropForm.growth_stage,
+                  planting_date: cropForm.planting_date || null,
+                  expected_harvest_date: cropForm.expected_harvest_date || null,
+                  area_value: areaVal,
+                  area_unit: cropForm.area_unit,
+                  health_status: cropForm.health_status,
+                  notes: cropForm.notes.trim() || null,
+                  updated_at: new Date().toISOString(),
+                }
+              : c
+          );
+        } else {
+          const newC: FarmCrop = {
+            id: 'demo-crop-' + Date.now(),
+            owner_id: user.id,
+            farm_id: cropForm.farm_id,
+            plot_id: cropForm.plot_id || null,
+            crop_name: cropForm.crop_name.trim(),
+            crop_variety: cropForm.crop_variety.trim() || null,
+            growth_stage: cropForm.growth_stage,
+            planting_date: cropForm.planting_date || null,
+            expected_harvest_date: cropForm.expected_harvest_date || null,
+            area_value: areaVal,
+            area_unit: cropForm.area_unit,
+            health_status: cropForm.health_status,
+            notes: cropForm.notes.trim() || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          currentCrops.unshift(newC);
+        }
+        localStorage.setItem('krishimitra_demo_crops', JSON.stringify(currentCrops));
+        setCrops(currentCrops);
+        setIsCropModalOpen(false);
+        setSuccessBanner('Crop saved successfully!');
+        setTimeout(() => setSuccessBanner(''), 3000);
+      } catch (err: any) {
+        alert(err.message || 'Error saving crop.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
 
     setIsSubmitting(true);
     try {
@@ -537,6 +689,44 @@ export default function MyFarmPage() {
   // Perform Delete
   const handleConfirmDelete = async () => {
     if (!deleteConfirmation || !user) return;
+
+    if (!isConfigured || user.id === 'demo-farmer-id-kerala') {
+      setIsSubmitting(true);
+      try {
+        if (deleteConfirmation.type === 'farm') {
+          const raw = localStorage.getItem('krishimitra_demo_farms');
+          const dFarms: Farm[] = raw ? JSON.parse(raw) : [];
+          const updated = dFarms.filter((f) => f.id !== deleteConfirmation.id);
+          localStorage.setItem('krishimitra_demo_farms', JSON.stringify(updated));
+          setFarms(updated);
+          if (selectedFarmId === deleteConfirmation.id) {
+            setSelectedFarmId(updated[0]?.id || null);
+          }
+        } else if (deleteConfirmation.type === 'plot') {
+          const raw = localStorage.getItem('krishimitra_demo_plots');
+          const dPlots: FarmPlot[] = raw ? JSON.parse(raw) : [];
+          const updated = dPlots.filter((p) => p.id !== deleteConfirmation.id);
+          localStorage.setItem('krishimitra_demo_plots', JSON.stringify(updated));
+          setPlots(updated);
+        } else if (deleteConfirmation.type === 'crop') {
+          const raw = localStorage.getItem('krishimitra_demo_crops');
+          const dCrops: FarmCrop[] = raw ? JSON.parse(raw) : [];
+          const updated = dCrops.filter((c) => c.id !== deleteConfirmation.id);
+          localStorage.setItem('krishimitra_demo_crops', JSON.stringify(updated));
+          setCrops(updated);
+        }
+
+        setDeleteConfirmation(null);
+        setSuccessBanner('Deleted successfully.');
+        setTimeout(() => setSuccessBanner(''), 3000);
+      } catch (err: any) {
+        alert(err.message || 'Deletion failed.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
 
@@ -685,7 +875,7 @@ export default function MyFarmPage() {
             <Building className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-2xl font-black text-stone-900 mt-2">{farms.length}</div>
-          <div className="text-xs text-stone-500 mt-0.5">Kerala registered holdings</div>
+          <div className="text-xs text-stone-500 mt-0.5">Active agricultural holdings</div>
         </Card>
 
         <Card className="p-4 bg-white border-stone-200 shadow-xs">
@@ -763,7 +953,7 @@ export default function MyFarmPage() {
               <p className="text-xs text-stone-500 max-w-sm mx-auto mt-1 mb-5">
                 {t(
                   'farm_mgmt.no_farms_desc',
-                  'Add your first farm holding in Kerala to begin tracking plots and crops.'
+                  'Add your first farm holding to begin tracking plots and crops.'
                 )}
               </p>
               <Button onClick={handleOpenAddFarm} className="rounded-xl shadow-xs">
@@ -885,7 +1075,7 @@ export default function MyFarmPage() {
                               {selectedFarm.village_or_town
                                 ? `${selectedFarm.village_or_town}, `
                                 : ''}
-                              {selectedFarm.district} District, Kerala
+                              {selectedFarm.district} District, {selectedFarm.state || selectedState || 'India'}
                             </p>
                           </div>
 
@@ -1245,7 +1435,7 @@ export default function MyFarmPage() {
         isOpen={isFarmModalOpen}
         onClose={() => setIsFarmModalOpen(false)}
         title={editingFarm ? t('farm_mgmt.edit_farm_btn', 'Edit Farm Details') : t('farm_mgmt.add_farm_btn', 'Register New Farm')}
-        description="Enter your farm's location in Kerala, total area, and operational notes."
+        description="Enter your farm's state, district, total area, and operational notes."
       >
         <form onSubmit={handleSubmitFarm} className="space-y-4">
           <div>
@@ -1265,20 +1455,42 @@ export default function MyFarmPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                District in Kerala *
+                State in India *
               </label>
               <select
-                value={farmForm.district}
-                onChange={(e) => setFarmForm({ ...farmForm, district: e.target.value as KeralaDistrict })}
-                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white cursor-pointer"
+                value={farmForm.state}
+                onChange={(e) => {
+                  const newState = e.target.value;
+                  const newDist = getDistrictsForState(newState)[0] || '';
+                  setFarmForm({ ...farmForm, state: newState, district: newDist });
+                }}
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white cursor-pointer font-medium"
               >
-                {KERALA_DISTRICTS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
+                {ALL_INDIAN_STATES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
                   </option>
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                District *
+              </label>
+              <select
+                value={farmForm.district}
+                onChange={(e) => setFarmForm({ ...farmForm, district: e.target.value })}
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white cursor-pointer font-medium"
+              >
+                {getDistrictsForState(farmForm.state).map((d) => (
+                  <option key={d} value={d}>
+                    {d} District
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">

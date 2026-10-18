@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 
 export function RecommendationsCard() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const recommendations = [
     {
@@ -17,18 +17,18 @@ export function RecommendationsCard() {
         'dashboard.rec_1_desc',
         'Recommended application of micronutrient mixture for high-yield hybrid palms this week.'
       ),
-      crop: 'Coconut (തെങ്ങ്)',
+      crop: language === 'ml' ? 'തെങ്ങ് (Coconut)' : 'Coconut Palm',
       priority: 'high',
       tag: 'Fertilizer',
     },
     {
       id: 'rec_2',
-      title: t('dashboard.rec_2_title', 'Nendran Banana Propping'),
+      title: t('dashboard.rec_2_title', 'Banana Plant Propping'),
       desc: t(
         'dashboard.rec_2_desc',
         'Provide bamboo supports to bunches nearing harvest ahead of anticipated gusty evening winds.'
       ),
-      crop: 'Nendran Banana (നേന്ത്രൻ)',
+      crop: language === 'ml' ? 'നേന്ത്രവാഴ (Banana)' : 'Banana',
       priority: 'medium',
       tag: 'Care',
     },
@@ -39,7 +39,7 @@ export function RecommendationsCard() {
         'dashboard.rec_3_desc',
         'Check for Brown Plant Hopper (BPH) signs in waterlogged paddy basins.'
       ),
-      crop: 'Paddy (നെല്ല്)',
+      crop: language === 'ml' ? 'നെല്ല് (Paddy)' : 'Paddy (Rice)',
       priority: 'high',
       tag: 'Protection',
     },
