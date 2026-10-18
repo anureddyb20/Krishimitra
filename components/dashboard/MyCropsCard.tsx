@@ -114,10 +114,40 @@ export function MyCropsCard() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'healthy' | 'attention'>('all');
   const [selectedCrop, setSelectedCrop] = useState<CropData | null>(null);
 
-  // Fetch real crops from Supabase if logged in
+  // Fetch real crops from Supabase or demo storage if logged in
   useEffect(() => {
     async function fetchLiveCrops() {
-      if (!user || !isConfigured) return;
+      if (!user) return;
+
+      if (!isConfigured || user.id === 'demo-farmer-id-kerala') {
+        try {
+          const raw = localStorage.getItem('krishimitra_demo_crops');
+          if (raw) {
+            const parsed = JSON.parse(raw) as FarmCrop[];
+            if (parsed.length > 0) {
+              const liveData: CropData[] = parsed.map((c) => ({
+                id: c.id,
+                name: c.crop_name,
+                variety: c.crop_variety || 'Kerala Variety',
+                acres: Number(c.area_value || 1.0),
+                stage: c.growth_stage,
+                health: 95,
+                status: 'healthy',
+                statusText: 'Healthy',
+                isLiveDatabase: true,
+                details: {
+                  irrigation: 'Monitored via My Farm',
+                  lastNutrient: c.planting_date ? `Planted: ${c.planting_date}` : 'Scheduled application',
+                  harvestExpected: 'Active Monsoon Cycle',
+                },
+              }));
+              setCrops(liveData);
+              setIsUsingLiveDb(true);
+            }
+          }
+        } catch {}
+        return;
+      }
 
       const supabase = getSupabaseBrowserClient();
       if (!supabase) return;

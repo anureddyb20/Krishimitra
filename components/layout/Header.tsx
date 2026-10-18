@@ -4,22 +4,25 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Sprout,
   Menu,
   X,
+  Sprout,
   LayoutDashboard,
+  Home,
   Bot,
   CloudSun,
   ShieldAlert,
   TrendingUp,
   Map,
   Settings,
-  Home,
   ChevronRight,
-  MapPin,
+  LogIn,
+  UserPlus,
+  Sparkles,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useLocation } from '@/lib/LocationContext';
+import { useAuth } from '@/lib/auth/AuthContext';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { LocationSelector } from '@/components/common/LocationSelector';
 import { AuthUserMenu } from '@/components/layout/AuthUserMenu';
@@ -30,18 +33,37 @@ export function Header() {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { selectedState, selectedDistrict } = useLocation();
+  const { user, profile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    { href: '/', label: t('nav.home', 'Home'), icon: Home },
-    { href: '/dashboard', label: t('nav.dashboard', 'Dashboard'), icon: LayoutDashboard },
-    { href: '/ai-assistant', label: t('nav.ai_assistant', 'AI Assistant'), icon: Bot },
-    { href: '/weather', label: t('nav.weather', 'Weather'), icon: CloudSun },
-    { href: '/crop-health', label: t('nav.crop_health', 'Crop Health'), icon: ShieldAlert },
-    { href: '/market-prices', label: t('nav.market_prices', 'Market Prices'), icon: TrendingUp },
-    { href: '/my-farm', label: t('nav.my_farm', 'My Farm'), icon: Map },
-    { href: '/settings', label: t('nav.settings', 'Settings'), icon: Settings },
-  ];
+  const isOnboarded = Boolean(user && profile?.onboarding_completed);
+  const isPendingOnboarding = Boolean(user && !profile?.onboarding_completed);
+
+  let navLinks: Array<{ href: string; label: string; icon: any }> = [];
+
+  if (!user) {
+    navLinks = [
+      { href: '/', label: t('nav.home', 'Home'), icon: Home },
+      { href: '/login', label: t('auth.sign_in_btn', 'Sign In (Demo)'), icon: LogIn },
+      { href: '/register', label: t('auth.register_btn', 'Create Account'), icon: UserPlus },
+    ];
+  } else if (isPendingOnboarding) {
+    navLinks = [
+      { href: '/', label: t('nav.home', 'Home'), icon: Home },
+      { href: '/onboarding', label: 'AI Land & Crop Setup', icon: Sparkles },
+    ];
+  } else {
+    navLinks = [
+      { href: '/', label: t('nav.home', 'Home'), icon: Home },
+      { href: '/dashboard', label: t('nav.dashboard', 'Dashboard'), icon: LayoutDashboard },
+      { href: '/ai-assistant', label: t('nav.ai_assistant', 'AI Assistant'), icon: Bot },
+      { href: '/weather', label: t('nav.weather', 'Weather'), icon: CloudSun },
+      { href: '/crop-health', label: t('nav.crop_health', 'Crop Health'), icon: ShieldAlert },
+      { href: '/market-prices', label: t('nav.market_prices', 'Market Prices'), icon: TrendingUp },
+      { href: '/my-farm', label: t('nav.my_farm', 'My Farm'), icon: Map },
+      { href: '/settings', label: t('nav.settings', 'Settings'), icon: Settings },
+    ];
+  }
 
   const getPageTitle = () => {
     switch (pathname) {
@@ -49,6 +71,12 @@ export function Header() {
         return t('nav.home', 'Home');
       case '/dashboard':
         return t('nav.dashboard', 'Farmer Dashboard');
+      case '/onboarding':
+        return 'AI Land Division Setup';
+      case '/login':
+        return t('auth.sign_in_btn', 'Sign In');
+      case '/register':
+        return t('auth.register_btn', 'Registration');
       case '/ai-assistant':
         return t('nav.ai_assistant', 'AI Assistant');
       case '/weather':
@@ -75,14 +103,11 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full border-b border-stone-200/80 bg-white/95 backdrop-blur-md transition-all">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex h-18 items-center justify-between gap-4">
-          {/* Left: Mobile Brand / Page Title on Desktop */}
-          <div className="flex items-center gap-3">
-            {/* Mobile Logo (on desktop the sidebar has the primary logo) */}
-            <Link
-              href="/"
-              className="lg:hidden flex items-center gap-2.5 group focus:outline-none"
-            >
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-900 flex items-center justify-center text-white shadow-sm">
+          {/* Left: Mobile Brand & Desktop Breadcrumb */}
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Mobile Branding Link */}
+            <Link href="/" className="lg:hidden flex items-center gap-2 shrink-0">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-900 flex items-center justify-center text-white shadow-xs">
                 <Sprout className="w-5 h-5 text-emerald-200" />
               </div>
               <div className="flex flex-col">
@@ -115,24 +140,49 @@ export function Header() {
             {/* Language Selector */}
             <LanguageSelector variant="header" />
 
-            {/* Auth User Menu */}
-            <AuthUserMenu />
-
-            {/* Quick Dashboard Action */}
-            <div className="hidden xl:block">
-              <Link href="/dashboard">
-                <Button size="sm" variant="primary" className="rounded-xl shadow-xs">
-                  <LayoutDashboard className="w-4 h-4 mr-1.5" />
-                  {t('nav.dashboard', 'Dashboard')}
+            {/* Auth User Menu or Quick Sign-In */}
+            {user ? (
+              <AuthUserMenu />
+            ) : (
+              <Link href="/login">
+                <Button size="sm" variant="outline" className="rounded-xl border-emerald-300 text-emerald-900 hover:bg-emerald-50 font-bold">
+                  <LogIn className="w-4 h-4 mr-1 text-emerald-700" />
+                  <span>Sign In</span>
                 </Button>
               </Link>
+            )}
+
+            {/* Primary Action Button */}
+            <div className="hidden xl:block">
+              {!user ? (
+                <Link href="/login">
+                  <Button size="sm" variant="primary" className="rounded-xl shadow-xs">
+                    <Sparkles className="w-4 h-4 mr-1.5" />
+                    <span>Try Demo Mode</span>
+                  </Button>
+                </Link>
+              ) : isPendingOnboarding ? (
+                <Link href="/onboarding">
+                  <Button size="sm" variant="primary" className="rounded-xl shadow-xs bg-amber-600 hover:bg-amber-700">
+                    <Sparkles className="w-4 h-4 mr-1.5" />
+                    <span>Complete Farm Setup</span>
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/dashboard">
+                  <Button size="sm" variant="primary" className="rounded-xl shadow-xs">
+                    <LayoutDashboard className="w-4 h-4 mr-1.5" />
+                    <span>{t('nav.dashboard', 'Dashboard')}</span>
+                  </Button>
+                </Link>
+              )}
             </div>
 
             {/* Mobile menu hamburger toggle */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="lg:hidden p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
               aria-label="Toggle Navigation Taskbar"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -177,12 +227,28 @@ export function Header() {
           })}
 
           <div className="pt-4 mt-2 border-t border-stone-100 flex flex-col gap-2">
-            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full justify-center">
-                <LayoutDashboard className="w-4 h-4 mr-2" />
-                {t('nav.dashboard', 'Open Farmer Dashboard')}
-              </Button>
-            </Link>
+            {!user ? (
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full justify-center">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In (Demo Account)
+                </Button>
+              </Link>
+            ) : isPendingOnboarding ? (
+              <Link href="/onboarding" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full justify-center bg-amber-600 hover:bg-amber-700">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Complete Farm Setup
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full justify-center">
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  {t('nav.dashboard', 'Open Farmer Dashboard')}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}

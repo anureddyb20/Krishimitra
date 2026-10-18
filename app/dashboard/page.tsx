@@ -48,7 +48,31 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchStats() {
-      if (!user || !isConfigured) return;
+      if (!user) return;
+
+      if (!isConfigured || user.id === 'demo-farmer-id-kerala') {
+        try {
+          const rawFarms = localStorage.getItem('krishimitra_demo_farms');
+          const dFarms = rawFarms ? JSON.parse(rawFarms) : [];
+          setLiveFarmsCount(dFarms.length);
+          const sumAcres = dFarms.reduce(
+            (acc: number, f: any) => acc + Number(f.area_value || 0),
+            0
+          );
+          setLiveTotalAcres(sumAcres);
+
+          const rawPlots = localStorage.getItem('krishimitra_demo_plots');
+          const dPlots = rawPlots ? JSON.parse(rawPlots) : [];
+          setLivePlotsCount(dPlots.length);
+
+          const rawCrops = localStorage.getItem('krishimitra_demo_crops');
+          const dCrops = rawCrops ? JSON.parse(rawCrops) : [];
+          setLiveCropsCount(dCrops.length);
+        } catch (err) {
+          console.warn('Demo stats load error:', err);
+        }
+        return;
+      }
 
       const supabase = getSupabaseBrowserClient();
       if (!supabase) return;

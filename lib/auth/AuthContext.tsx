@@ -9,6 +9,10 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useLocation } from '@/lib/LocationContext';
 import { SupportedLanguage } from '@/types/i18n';
 
+export const DEMO_USER_ID = 'demo-farmer-id-kerala';
+export const DEMO_USER_STORAGE = 'krishimitra_demo_user';
+export const DEMO_PROFILE_STORAGE = 'krishimitra_demo_profile';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -17,6 +21,9 @@ interface AuthContextType {
   isConfigured: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
+  signInWithDemo: (email?: string, password?: string) => Promise<Profile>;
+  updateProfile: (updates: Partial<Profile>) => Promise<Profile | null>;
+  resetDemoData: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,6 +40,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isConfigured = isSupabaseConfigured();
 
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    if (userId === DEMO_USER_ID) {
+      try {
+        const raw = localStorage.getItem(DEMO_PROFILE_STORAGE);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Profile;
+          setProfile(parsed);
+          return parsed;
+        }
+      } catch {}
+      return null;
+    }
+
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return null;
 
@@ -77,7 +96,129 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return await fetchProfile(user.id);
   }, [user, fetchProfile]);
 
+  const signInWithDemo = async (email = 'farmer@krishimitra.in'): Promise<Profile> => {
+    const mockUser: User = {
+      id: DEMO_USER_ID,
+      email,
+      app_metadata: { provider: 'demo' },
+      user_metadata: { full_name: 'Anil Kumar (അനിൽ കുമാർ)' },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    };
+
+    let existingProfile: Profile | null = null;
+    try {
+      const raw = localStorage.getItem(DEMO_PROFILE_STORAGE);
+      if (raw) existingProfile = JSON.parse(raw);
+    } catch {}
+
+    const activeProfile: Profile = existingProfile || {
+      id: DEMO_USER_ID,
+      full_name: 'Anil Kumar (അനിൽ കുമാർ)',
+      preferred_language: 'ml',
+      district: 'Wayanad',
+      village_or_town: 'Meppadi',
+      phone_number: '+91 98470 12345',
+      onboarding_completed: false, // Starts as false to allow the user to test land division onboarding
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    try {
+      localStorage.setItem(DEMO_USER_STORAGE, JSON.stringify(mockUser));
+      localStorage.setItem(DEMO_PROFILE_STORAGE, JSON.stringify(activeProfile));
+    } catch {}
+
+    setUser(mockUser);
+    setProfile(activeProfile);
+
+    if (activeProfile.preferred_language) {
+      setLanguage(activeProfile.preferred_language as SupportedLanguage);
+    }
+    if (activeProfile.district) {
+      setSelectedState('Kerala');
+      setSelectedDistrict(activeProfile.district);
+    }
+
+    return activeProfile;
+  };
+
+  const updateProfile = async (updates: Partial<Profile>): Promise<Profile | null> => {
+    if (!user) return null;
+
+    if (user.id === DEMO_USER_ID) {
+      const current = profile || {
+        id: DEMO_USER_ID,
+        full_name: 'Anil Kumar (അനിൽ കുമാർ)',
+        preferred_language: 'ml',
+        district: 'Wayanad',
+        village_or_town: 'Meppadi',
+        phone_number: '+91 98470 12345',
+        onboarding_completed: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const updated: Profile = {
+        ...current,
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
+
+      try {
+        localStorage.setItem(DEMO_PROFILE_STORAGE, JSON.stringify(updated));
+      } catch {}
+
+      setProfile(updated);
+      if (updated.preferred_language) setLanguage(updated.preferred_language as SupportedLanguage);
+      if (updated.district) {
+        setSelectedState('Kerala');
+        setSelectedDistrict(updated.district);
+      }
+      return updated;
+    }
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return null;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    setProfile(data as Profile);
+    return data as Profile;
+  };
+
+  const resetDemoData = () => {
+    try {
+      localStorage.removeItem(DEMO_USER_STORAGE);
+      localStorage.removeItem(DEMO_PROFILE_STORAGE);
+      localStorage.removeItem('krishimitra_demo_farms');
+      localStorage.removeItem('krishimitra_demo_plots');
+      localStorage.removeItem('krishimitra_demo_crops');
+    } catch {}
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    router.push('/');
+    router.refresh();
+  };
+
   useEffect(() => {
+    // Check for demo user in localStorage first
+    try {
+      const demoUserRaw = localStorage.getItem(DEMO_USER_STORAGE);
+      if (demoUserRaw) {
+        const demoUser = JSON.parse(demoUserRaw) as User;
+        setUser(demoUser);
+        fetchProfile(demoUser.id).finally(() => setIsLoading(false));
+        return;
+      }
+    } catch {}
+
     if (!isConfigured) {
       setIsLoading(false);
       return;
@@ -130,8 +271,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     const supabase = getSupabaseBrowserClient();
     if (supabase) {
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut();
+      } catch {}
     }
+    try {
+      localStorage.removeItem(DEMO_USER_STORAGE);
+    } catch {}
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -149,6 +295,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isConfigured,
         signOut,
         refreshProfile,
+        signInWithDemo,
+        updateProfile,
+        resetDemoData,
       }}
     >
       {children}

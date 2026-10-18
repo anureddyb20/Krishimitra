@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   Eye,
   EyeOff,
+  Sparkles,
+  Zap,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -29,7 +31,7 @@ function LoginForm() {
   const authCallbackError = searchParams.get('error');
 
   const { t } = useTranslation();
-  const { isConfigured, refreshProfile } = useAuth();
+  const { isConfigured, refreshProfile, signInWithDemo } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +43,32 @@ function LoginForm() {
   );
   const [successMessage, setSuccessMessage] = useState('');
 
+  const handleFillDemo = () => {
+    setEmail('farmer@krishimitra.in');
+    setPassword('Krishi@123');
+    setErrorMessage('');
+  };
+
+  const handleQuickDemo = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      const demoProfile = await signInWithDemo('farmer@krishimitra.in', 'Krishi@123');
+      setSuccessMessage('Signed in as Demo Farmer! Redirecting to farm setup...');
+      setTimeout(() => {
+        if (!demoProfile || !demoProfile.onboarding_completed) {
+          router.push('/onboarding');
+        } else {
+          router.push(nextDestination);
+        }
+        router.refresh();
+      }, 400);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Demo sign in failed.');
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -51,14 +79,31 @@ function LoginForm() {
       return;
     }
 
-    if (!isConfigured) {
-      setErrorMessage(
-        t(
-          'auth.unconfigured_notice',
-          'Supabase credentials are not yet configured. Please check SUPABASE_SETUP.md and set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.'
-        )
-      );
-      return;
+    // If Supabase is unconfigured or user enters demo credentials, use demo sign in
+    const isDemoEmail =
+      email.trim().toLowerCase() === 'farmer@krishimitra.in' ||
+      email.trim().toLowerCase() === 'demo@krishimitra.in' ||
+      !isConfigured;
+
+    if (isDemoEmail) {
+      setIsLoading(true);
+      try {
+        const demoProfile = await signInWithDemo(email.trim(), password);
+        setSuccessMessage('Signed in successfully! Redirecting...');
+        setTimeout(() => {
+          if (!demoProfile || !demoProfile.onboarding_completed) {
+            router.push('/onboarding');
+          } else {
+            router.push(nextDestination);
+          }
+          router.refresh();
+        }, 400);
+        return;
+      } catch (err: any) {
+        setErrorMessage(err.message || 'Demo sign in failed.');
+        setIsLoading(false);
+        return;
+      }
     }
 
     const supabase = getSupabaseBrowserClient();
@@ -83,10 +128,8 @@ function LoginForm() {
 
       if (data?.user) {
         setSuccessMessage('Signed in successfully! Redirecting...');
-        // Refresh farmer profile
         const profile = await refreshProfile();
 
-        // If onboarding is not completed, redirect to onboarding flow
         if (profile && !profile.onboarding_completed) {
           router.push('/onboarding');
         } else {
@@ -119,14 +162,44 @@ function LoginForm() {
           </p>
         </div>
 
-        {/* Configuration notice if Supabase env vars are missing */}
-        {!isConfigured && (
-          <AlertBanner
-            type="warning"
-            title="Database Configuration Needed"
-            message="Supabase is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local to enable real database authentication."
-          />
-        )}
+        {/* Demo Credentials Card */}
+        <div className="p-4 bg-emerald-50/80 border border-emerald-200/90 rounded-3xl space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-emerald-700" />
+              Demo Farmer Credentials
+            </span>
+            <button
+              type="button"
+              onClick={handleFillDemo}
+              className="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline underline-offset-2 cursor-pointer transition-colors"
+            >
+              Fill In Form
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs bg-white p-3 rounded-2xl border border-emerald-100 shadow-2xs">
+            <div>
+              <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider block">Email</span>
+              <span className="font-bold text-emerald-950 truncate block">farmer@krishimitra.in</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider block">Password</span>
+              <span className="font-bold text-emerald-950 truncate block">Krishi@123</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleQuickDemo}
+            disabled={isLoading}
+            className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs justify-center cursor-pointer transition-all"
+          >
+            <Zap className="w-3.5 h-3.5 mr-1 text-emerald-200" />
+            One-Click Demo Sign-In
+          </Button>
+        </div>
 
         {errorMessage && (
           <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-sm flex items-start gap-3 animate-in fade-in">
@@ -160,7 +233,7 @@ function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="farmer@example.com"
+                    placeholder="farmer@krishimitra.in"
                     className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-stone-900 placeholder:text-stone-400"
                   />
                 </div>
@@ -194,7 +267,7 @@ function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600 focus:outline-none"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600 focus:outline-none cursor-pointer"
                     aria-label="Toggle password visibility"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -224,7 +297,7 @@ function LoginForm() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 rounded-xl justify-center font-bold text-sm shadow-sm"
+                className="w-full py-3 rounded-xl justify-center font-bold text-sm shadow-sm cursor-pointer"
               >
                 {isLoading ? (
                   <span>{t('auth.signing_in', 'Signing In...')}</span>

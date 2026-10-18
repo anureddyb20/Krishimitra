@@ -141,8 +141,31 @@ export default function MyFarmPage() {
 
   // Fetch all farm data for current user
   const loadFarmData = useCallback(async () => {
-    if (!user || !isConfigured) {
+    if (!user) {
       setIsLoading(false);
+      return;
+    }
+
+    if (!isConfigured || user.id === 'demo-farmer-id-kerala') {
+      try {
+        const rawFarms = localStorage.getItem('krishimitra_demo_farms');
+        const loadedFarms: Farm[] = rawFarms ? JSON.parse(rawFarms) : [];
+        setFarms(loadedFarms);
+
+        if (loadedFarms.length > 0 && !selectedFarmId) {
+          setSelectedFarmId(loadedFarms[0].id);
+        }
+
+        const rawPlots = localStorage.getItem('krishimitra_demo_plots');
+        setPlots(rawPlots ? JSON.parse(rawPlots) : []);
+
+        const rawCrops = localStorage.getItem('krishimitra_demo_crops');
+        setCrops(rawCrops ? JSON.parse(rawCrops) : []);
+      } catch (err) {
+        console.warn('Demo farm load error:', err);
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
 
