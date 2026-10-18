@@ -5,6 +5,8 @@ import {
   ALL_INDIAN_STATES,
   getDistrictsForState,
   getDefaultDistrictForState,
+  getStateForDistrict,
+  isDistrictInState,
 } from './locations';
 
 const STATE_STORAGE_KEY = 'krishimitra_selected_state';
@@ -28,19 +30,44 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [selectedDistrict, setSelectedDistrictState] = useState<string>('Belagavi');
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Restore saved state and district from localStorage
+  // Restore saved state and district from localStorage with strict geographical validation
   useEffect(() => {
     try {
-      const savedState = localStorage.getItem(STATE_STORAGE_KEY);
-      const savedDistrict = localStorage.getItem(DISTRICT_STORAGE_KEY);
-      if (savedState && ALL_INDIAN_STATES.includes(savedState)) {
-        setSelectedStateState(savedState);
-        const validDistricts = getDistrictsForState(savedState);
-        if (savedDistrict && validDistricts.includes(savedDistrict)) {
-          setSelectedDistrictState(savedDistrict);
-        } else {
-          setSelectedDistrictState(validDistricts[0] || '');
+      let savedState = localStorage.getItem(STATE_STORAGE_KEY);
+      let savedDistrict = localStorage.getItem(DISTRICT_STORAGE_KEY);
+
+      // 1. Resolve geography if district and state mismatch (e.g. Wayanad in Karnataka)
+      if (savedDistrict && savedState) {
+        if (!isDistrictInState(savedDistrict, savedState)) {
+          // If the district belongs to another valid state (e.g., Wayanad belongs to Kerala):
+          // If savedState is Karnataka, correct the district to Belagavi!
+          const realState = getStateForDistrict(savedDistrict);
+          if (realState && savedState === 'Kerala') {
+            // Keep Wayanad for Kerala
+            savedDistrict = 'Wayanad';
+          } else {
+            // State is Karnataka or other, reset district to valid district of savedState
+            savedDistrict = getDefaultDistrictForState(savedState);
+          }
         }
+      } else if (savedDistrict && !savedState) {
+        // District saved without state: infer state from district
+        savedState = getStateForDistrict(savedDistrict) || 'Karnataka';
+      } else if (!savedState) {
+        savedState = 'Karnataka';
+        savedDistrict = 'Belagavi';
+      }
+
+      if (savedState && ALL_INDIAN_STATES.includes(savedState)) {
+        const validDistricts = getDistrictsForState(savedState);
+        const finalDistrict = (savedDistrict && validDistricts.includes(savedDistrict))
+          ? savedDistrict
+          : (validDistricts[0] || getDefaultDistrictForState(savedState));
+
+        setSelectedStateState(savedState);
+        setSelectedDistrictState(finalDistrict);
+        localStorage.setItem(STATE_STORAGE_KEY, savedState);
+        localStorage.setItem(DISTRICT_STORAGE_KEY, finalDistrict);
       }
     } catch {
       // ignore in restricted mode
@@ -50,9 +77,13 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setSelectedState = (newState: string) => {
+    if (!ALL_INDIAN_STATES.includes(newState)) return;
     setSelectedStateState(newState);
     const districts = getDistrictsForState(newState);
-    const newDist = districts.includes(selectedDistrict) ? selectedDistrict : districts[0] || '';
+    // If current selectedDistrict does not belong to the new state, immediately switch to the new state's default district!
+    const newDist = isDistrictInState(selectedDistrict, newState)
+      ? selectedDistrict
+      : (districts[0] || getDefaultDistrictForState(newState));
     setSelectedDistrictState(newDist);
     try {
       localStorage.setItem(STATE_STORAGE_KEY, newState);
@@ -63,11 +94,37 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setSelectedDistrict = (newDistrict: string) => {
-    setSelectedDistrictState(newDistrict);
-    try {
-      localStorage.setItem(DISTRICT_STORAGE_KEY, newDistrict);
-    } catch {
-      // ignore
+    if (!newDistrict) return;
+    // If the district belongs to current selectedState, set it directly
+    if (isDistrictInState(newDistrict, selectedState)) {
+      setSelectedDistrictState(newDistrict);
+      try {
+        localStorage.setItem(DISTRICT_STORAGE_KEY, newDistrict);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
+    // If district belongs to another state (e.g. user selected Wayanad while state was Karnataka):
+    const parentState = getStateForDistrict(newDistrict);
+    if (parentState) {
+      setSelectedStateState(parentState);
+      setSelectedDistrictState(newDistrict);
+      try {
+        localStorage.setItem(STATE_STORAGE_KEY, parentState);
+        localStorage.setItem(DISTRICT_STORAGE_KEY, newDistrict);
+      } catch {
+        // ignore
+      }
+    } else {
+      const fallbackDist = getDefaultDistrictForState(selectedState);
+      setSelectedDistrictState(fallbackDist);
+      try {
+        localStorage.setItem(DISTRICT_STORAGE_KEY, fallbackDist);
+      } catch {
+        // ignore
+      }
     }
   };
 
@@ -75,12 +132,13 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const suggestLocationForLanguage = (lang: string) => {
     // Only suggest if not already saved in localStorage
     if (!localStorage.getItem(STATE_STORAGE_KEY)) {
-      let state = 'Kerala';
+      let state = 'Karnataka';
       if (lang === 'kn') state = 'Karnataka';
       else if (lang === 'te') state = 'Andhra Pradesh';
       else if (lang === 'ta') state = 'Tamil Nadu';
       else if (lang === 'hi') state = 'Uttar Pradesh';
       else if (lang === 'ml') state = 'Kerala';
+      else if (lang === 'en') state = 'Karnataka';
       const dist = getDefaultDistrictForState(state);
       setSelectedState(state);
       setSelectedDistrict(dist);

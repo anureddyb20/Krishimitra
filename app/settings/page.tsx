@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { LocationSelector } from '@/components/common/LocationSelector';
+import { sanitizeFarmerName } from '@/lib/utils';
 import { SupportedLanguage } from '@/types/i18n';
 
 
@@ -62,7 +63,7 @@ export default function SettingsPage() {
   // Sync profile details when loaded
   useEffect(() => {
     if (profile) {
-      if (profile.full_name) setFullName(profile.full_name);
+      if (profile.full_name) setFullName(sanitizeFarmerName(profile.full_name, language));
       if (profile.phone_number) setPhoneNumber(profile.phone_number);
       if (profile.state && availableStates.includes(profile.state)) {
         setSelectedState(profile.state);
@@ -72,10 +73,13 @@ export default function SettingsPage() {
       }
       if (profile.village_or_town) setVillage(profile.village_or_town);
     }
-  }, [profile]);
+  }, [profile, language]);
 
   const handleLanguageSelect = (code: SupportedLanguage) => {
     setLanguage(code);
+    if (code !== 'ml') {
+      setFullName((prev) => sanitizeFarmerName(prev, code));
+    }
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 2500);
   };

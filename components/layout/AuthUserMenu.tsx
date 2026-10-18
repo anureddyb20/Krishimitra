@@ -15,12 +15,19 @@ import {
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { Button } from '@/components/ui/Button';
+import { sanitizeFarmerName } from '@/lib/utils';
 
 export function AuthUserMenu() {
-  const { user, profile, isConfigured, signOut } = useAuth();
-  const { t } = useTranslation();
+  const { user, profile, signOut } = useAuth();
+  const { t, language } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -33,17 +40,17 @@ export function AuthUserMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (!isConfigured || !user) {
+  if (!mounted || !user) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <Link href="/login">
-          <Button size="sm" variant="outline" className="rounded-xl text-xs font-bold">
-            <LogIn className="w-3.5 h-3.5 mr-1" />
+          <Button size="sm" variant="outline" className="h-9 rounded-xl text-xs font-bold border-stone-200">
+            <LogIn className="w-3.5 h-3.5 mr-1 text-emerald-700" />
             {t('auth.sign_in_btn', 'Sign In')}
           </Button>
         </Link>
         <Link href="/register" className="hidden sm:inline-block">
-          <Button size="sm" variant="primary" className="rounded-xl text-xs font-bold shadow-xs">
+          <Button size="sm" variant="primary" className="h-9 rounded-xl text-xs font-bold shadow-xs">
             <UserPlus className="w-3.5 h-3.5 mr-1" />
             {t('auth.register_btn', 'Register')}
           </Button>
@@ -53,32 +60,33 @@ export function AuthUserMenu() {
   }
 
   // Initials for avatar
-  const displayName = profile?.full_name || user.email?.split('@')[0] || 'Farmer';
+  const displayName = sanitizeFarmerName(profile?.full_name, language) || user.email?.split('@')[0] || 'Farmer';
   const initials = displayName
     .split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .slice(0, 2)
-    .toUpperCase();
+    .toUpperCase() || 'FM';
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative shrink-0" ref={menuRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+        className="flex items-center gap-2 px-2 sm:px-2.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs h-9"
         aria-label="User Account Menu"
         aria-expanded={isOpen}
       >
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-900 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
+        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-700 to-emerald-900 text-white font-extrabold text-[11px] flex items-center justify-center shrink-0">
           {initials}
         </div>
-        <div className="hidden sm:flex flex-col text-left min-w-0 pr-1">
-          <span className="text-xs font-bold text-stone-900 truncate max-w-[120px]">
+        <div className="hidden sm:flex flex-col text-left min-w-0 pr-0.5">
+          <span className="text-xs font-bold text-stone-900 truncate max-w-[110px] leading-tight">
             {displayName}
           </span>
-          <span className="text-[10px] text-emerald-700 font-semibold truncate">
-            {profile?.district || 'Kerala'}
+          <span className="text-[10px] text-emerald-700 font-semibold truncate leading-tight">
+            {profile?.district || profile?.state || 'Verified Farmer'}
           </span>
         </div>
         <ChevronDown className="w-3.5 h-3.5 text-stone-400 shrink-0" />

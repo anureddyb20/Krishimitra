@@ -39,20 +39,24 @@ export function LanguageSelector({ variant = 'header', className }: LanguageSele
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         className={cn(
-          'inline-flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500',
+          'inline-flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500',
           variant === 'header'
-            ? 'bg-stone-50 hover:bg-stone-100 text-stone-800 border border-stone-200 shadow-xs'
-            : 'bg-white hover:bg-stone-50 text-stone-900 border border-stone-300'
+            ? 'h-9 bg-stone-50 hover:bg-stone-100 text-stone-800 border border-stone-200 shadow-xs'
+            : 'py-2 bg-white hover:bg-stone-50 text-stone-900 border border-stone-300'
         )}
       >
-        <span className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-emerald-700" />
+        <span className="flex items-center gap-1.5 sm:gap-2">
+          <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700 shrink-0" />
           <span className="font-semibold">{currentLanguageInfo.name}</span>
-          <span className="text-xs text-stone-500 font-normal">({currentLanguageInfo.englishName})</span>
+          {currentLanguageInfo.name !== currentLanguageInfo.englishName && (
+            <span className="text-[11px] sm:text-xs text-stone-500 font-normal hidden sm:inline">
+              ({currentLanguageInfo.englishName})
+            </span>
+          )}
         </span>
         <ChevronDown
           className={cn(
-            'w-4 h-4 text-stone-500 transition-transform duration-200',
+            'w-3.5 h-3.5 text-stone-500 transition-transform duration-200 shrink-0',
             isOpen && 'transform rotate-180'
           )}
         />

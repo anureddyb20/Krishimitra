@@ -32,9 +32,10 @@ import { UpcomingTasksCard } from '@/components/dashboard/UpcomingTasksCard';
 import { AIAssistantCard } from '@/components/dashboard/AIAssistantCard';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import { sanitizeFarmerName } from '@/lib/utils';
 
 export default function DashboardPage() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { selectedState, selectedDistrict } = useLocation();
   const { user, profile, isConfigured } = useAuth();
 
@@ -112,7 +113,7 @@ export default function DashboardPage() {
   }, [user, isConfigured]);
 
   // Display Name and Initials
-  const farmerName = profile?.full_name || user?.email?.split('@')[0] || 'Demonstration Farmer';
+  const farmerName = sanitizeFarmerName(profile?.full_name, language) || user?.email?.split('@')[0] || 'Demonstration Farmer';
   const farmerDistrict = profile?.district || selectedDistrict;
   const farmerState = profile?.state || selectedState;
   const initials = farmerName

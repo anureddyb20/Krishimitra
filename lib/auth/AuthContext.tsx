@@ -9,8 +9,9 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useLocation } from '@/lib/LocationContext';
 import { SupportedLanguage } from '@/types/i18n';
 import { sanitizeFarmerName } from '@/lib/utils';
+import { isDistrictInState, getStateForDistrict, getDefaultDistrictForState } from '@/lib/locations';
 
-export const DEMO_USER_ID = 'demo-farmer-id-kerala';
+export const DEMO_USER_ID = 'demo-farmer-id-pan-india';
 export const DEMO_USER_STORAGE = 'krishimitra_demo_user';
 export const DEMO_PROFILE_STORAGE = 'krishimitra_demo_profile';
 
@@ -49,10 +50,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Strip any residual Malayalam text from demo profile if in English/non-Malayalam
           if (parsed.full_name && /[\u0D00-\u0D7F]/.test(parsed.full_name)) {
             parsed.full_name = sanitizeFarmerName(parsed.full_name, 'en');
-            try {
-              localStorage.setItem(DEMO_PROFILE_STORAGE, JSON.stringify(parsed));
-            } catch {}
           }
+          // Validate geographic correlation: district must belong to state!
+          if (parsed.district && parsed.state && !isDistrictInState(parsed.district, parsed.state)) {
+            parsed.district = getDefaultDistrictForState(parsed.state);
+          }
+          try {
+            localStorage.setItem(DEMO_PROFILE_STORAGE, JSON.stringify(parsed));
+          } catch {}
           setProfile(parsed);
           return parsed;
         }
@@ -122,13 +127,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (raw) existingProfile = JSON.parse(raw);
     } catch {}
 
+    const stateChoice = selectedState || 'Karnataka';
+    const districtChoice = isDistrictInState(selectedDistrict, stateChoice)
+      ? selectedDistrict
+      : getDefaultDistrictForState(stateChoice);
+
+    if (existingProfile) {
+      if (existingProfile.state && existingProfile.district && !isDistrictInState(existingProfile.district, existingProfile.state)) {
+        existingProfile.district = getDefaultDistrictForState(existingProfile.state);
+      }
+      if (!existingProfile.state) {
+        existingProfile.state = stateChoice;
+        existingProfile.district = districtChoice;
+      }
+    }
+
     const activeProfile: Profile = existingProfile || {
       id: DEMO_USER_ID,
       full_name: 'Anil Kumar',
       preferred_language: 'en',
-      state: selectedState || 'Karnataka',
-      district: selectedDistrict || 'Belagavi',
-      village_or_town: 'Gokak',
+      state: stateChoice,
+      district: districtChoice,
+      village_or_town: stateChoice === 'Karnataka' ? 'Gokak' : 'Kalpetta',
       phone_number: '+91 98470 12345',
       onboarding_completed: false, // Starts as false to allow the user to test land division onboarding
       created_at: new Date().toISOString(),
@@ -172,9 +192,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
+      const targetLang = updates.preferred_language || current.preferred_language || language || 'en';
+      const cleanedFullName = updates.full_name !== undefined
+        ? sanitizeFarmerName(updates.full_name, targetLang)
+        : current.full_name;
+
+      const stateChoice = updates.state || current.state || selectedState || 'Karnataka';
+      let districtChoice = updates.district || current.district || selectedDistrict || 'Belagavi';
+      if (!isDistrictInState(districtChoice, stateChoice)) {
+        districtChoice = getDefaultDistrictForState(stateChoice);
+      }
+
       const updated: Profile = {
         ...current,
         ...updates,
+        state: stateChoice,
+        district: districtChoice,
+        full_name: cleanedFullName,
         updated_at: new Date().toISOString(),
       };
 
@@ -184,8 +218,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setProfile(updated);
       if (updated.preferred_language) setLanguage(updated.preferred_language as SupportedLanguage);
+      if (updated.state) {
+        setSelectedState(updated.state);
+      }
       if (updated.district) {
-        setSelectedState('Kerala');
         setSelectedDistrict(updated.district);
       }
       return updated;

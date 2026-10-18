@@ -298,5 +298,24 @@ export function getDistrictsForState(stateName: string): string[] {
 
 export function getDefaultDistrictForState(stateName: string): string {
   const districts = getDistrictsForState(stateName);
-  return districts[0] || (stateName === 'Kerala' ? 'Wayanad' : 'Mandya');
+  return districts[0] || (stateName === 'Kerala' ? 'Wayanad' : 'Belagavi');
 }
+
+export function getStateForDistrict(districtName: string): string | null {
+  if (!districtName) return null;
+  const target = districtName.trim().toLowerCase();
+  for (const [stateName, data] of Object.entries(INDIAN_STATES_DATA)) {
+    if (data.districts.some((d) => d.toLowerCase() === target)) {
+      return stateName;
+    }
+  }
+  return null;
+}
+
+export function isDistrictInState(districtName: string, stateName: string): boolean {
+  if (!districtName || !stateName) return false;
+  const districts = getDistrictsForState(stateName);
+  const target = districtName.trim().toLowerCase();
+  return districts.some((d) => d.toLowerCase() === target);
+}
+

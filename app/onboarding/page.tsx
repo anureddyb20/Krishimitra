@@ -28,6 +28,7 @@ import { SUPPORTED_LANGUAGES } from '@/lib/i18n/config';
 import { SupportedLanguage } from '@/types/i18n';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { sanitizeFarmerName } from '@/lib/utils';
 
 // Pan-Indian Multilingual Crop Definitions
 interface PanIndianCrop {
@@ -198,7 +199,9 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Step 1: Farmer & Regional Location
-  const [fullName, setFullName] = useState(profile?.full_name || 'Anil Kumar');
+  const [fullName, setFullName] = useState(() => {
+    return sanitizeFarmerName(profile?.full_name, language) || 'Anil Kumar';
+  });
   const [village, setVillage] = useState(profile?.village_or_town || 'Belagavi Rural');
 
   // Step 2: Total Land & Farm Setup
@@ -221,7 +224,9 @@ export default function OnboardingPage() {
   // Sync profile details when profile is loaded
   useEffect(() => {
     if (profile) {
-      if (profile.full_name) setFullName(profile.full_name);
+      if (profile.full_name) {
+        setFullName(sanitizeFarmerName(profile.full_name, language));
+      }
       if (profile.village_or_town) setVillage(profile.village_or_town);
       if (profile.state && availableStates.includes(profile.state)) {
         setSelectedState(profile.state);
@@ -230,7 +235,14 @@ export default function OnboardingPage() {
         setSelectedDistrict(profile.district);
       }
     }
-  }, [profile]);
+  }, [profile, language]);
+
+  // Strip Malayalam if language is not Malayalam
+  useEffect(() => {
+    if (language !== 'ml' && /[\u0D00-\u0D7F]/.test(fullName)) {
+      setFullName((prev) => sanitizeFarmerName(prev, language));
+    }
+  }, [language, fullName]);
 
   // Set default initial crop selection based on state
   useEffect(() => {
@@ -447,8 +459,9 @@ export default function OnboardingPage() {
         localStorage.setItem('krishimitra_demo_crops', JSON.stringify(demoCrops));
 
         // Mark onboarding completed in demo profile
+        const cleanedName = sanitizeFarmerName(fullName.trim(), language);
         await updateProfile({
-          full_name: fullName.trim(),
+          full_name: cleanedName,
           preferred_language: language,
           state: selectedState,
           district: selectedDistrict,
@@ -471,9 +484,10 @@ export default function OnboardingPage() {
       }
 
       // Update Profile
+      const cleanedName = sanitizeFarmerName(fullName.trim(), language);
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: user.id,
-        full_name: fullName.trim(),
+        full_name: cleanedName,
         preferred_language: language,
         state: selectedState,
         district: selectedDistrict,

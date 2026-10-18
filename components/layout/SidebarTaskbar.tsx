@@ -29,6 +29,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { isDistrictInState, getDefaultDistrictForState } from '@/lib/locations';
 
 export function SidebarTaskbar() {
   const pathname = usePathname();
@@ -164,7 +165,9 @@ export function SidebarTaskbar() {
                 suppressHydrationWarning
                 className="text-xs font-bold text-emerald-950 truncate block"
               >
-                {mounted ? `${selectedDistrict}, ${selectedState}` : 'Wayanad, Kerala'}
+                {mounted
+                  ? `${isDistrictInState(selectedDistrict, selectedState) ? selectedDistrict : getDefaultDistrictForState(selectedState)}, ${selectedState}`
+                  : 'Belagavi, Karnataka'}
               </span>
             </div>
           </div>
@@ -233,7 +236,7 @@ export function SidebarTaskbar() {
         })}
 
         {/* Unauthenticated Guide Card */}
-        {!collapsed && !user && (
+        {!collapsed && !currentUser && (
           <div className="mt-6 mx-1 p-3.5 bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-200/90 rounded-2xl space-y-2">
             <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-950">
               <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
@@ -277,7 +280,7 @@ export function SidebarTaskbar() {
               <LanguageSelector variant="header" className="w-full" />
             </div>
             <div className="text-[11px] text-stone-400 text-center pt-1 font-medium">
-              KrishiMitra • Kerala Agri AI
+              KrishiMitra • Smart Agri AI
             </div>
           </>
         ) : (

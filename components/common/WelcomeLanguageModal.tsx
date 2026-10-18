@@ -9,6 +9,7 @@ import { SupportedLanguage } from '@/types/i18n';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { LocationSelector } from '@/components/common/LocationSelector';
+import { sanitizeFarmerName } from '@/lib/utils';
 
 export function WelcomeLanguageModal() {
   const router = useRouter();
@@ -49,7 +50,8 @@ export function WelcomeLanguageModal() {
 
     if (farmerName.trim()) {
       try {
-        localStorage.setItem('krishimitra_farmer_name', farmerName.trim());
+        const cleaned = sanitizeFarmerName(farmerName.trim(), language);
+        localStorage.setItem('krishimitra_farmer_name', cleaned);
       } catch {
         // ignore
       }
