@@ -22,6 +22,7 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useLocation } from '@/lib/LocationContext';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { LocationSelector } from '@/components/common/LocationSelector';
+import { AuthUserMenu } from '@/components/layout/AuthUserMenu';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
@@ -114,8 +115,11 @@ export function Header() {
             {/* Language Selector */}
             <LanguageSelector variant="header" />
 
+            {/* Auth User Menu */}
+            <AuthUserMenu />
+
             {/* Quick Dashboard Action */}
-            <div className="hidden sm:block">
+            <div className="hidden xl:block">
               <Link href="/dashboard">
                 <Button size="sm" variant="primary" className="rounded-xl shadow-xs">
                   <LayoutDashboard className="w-4 h-4 mr-1.5" />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Settings,
@@ -12,14 +12,41 @@ import {
   ArrowLeft,
   Check,
   ShieldCheck,
+  User,
+  Phone,
+  Building,
+  Save,
+  AlertCircle,
+  LogIn,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useLocation } from '@/lib/LocationContext';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { LocationSelector } from '@/components/common/LocationSelector';
 import { SupportedLanguage } from '@/types/i18n';
+import { KeralaDistrict } from '@/types/database';
+
+const KERALA_DISTRICTS: KeralaDistrict[] = [
+  'Alappuzha',
+  'Ernakulam',
+  'Idukki',
+  'Kannur',
+  'Kasaragod',
+  'Kollam',
+  'Kottayam',
+  'Kozhikode',
+  'Malappuram',
+  'Palakkad',
+  'Pathanamthitta',
+  'Thiruvananthapuram',
+  'Thrissur',
+  'Wayanad',
+];
 
 export default function SettingsPage() {
   const {
@@ -29,14 +56,111 @@ export default function SettingsPage() {
     supportedLanguages,
     setIsOnboardingOpen,
   } = useTranslation();
-  const { selectedState, selectedDistrict } = useLocation();
+  const { selectedState, selectedDistrict, setSelectedDistrict, setSelectedState } = useLocation();
+  const { user, profile, isConfigured, refreshProfile } = useAuth();
+
+  // Profile Form State
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [selectedKeralaDistrict, setSelectedKeralaDistrict] = useState<KeralaDistrict>('Wayanad');
+  const [village, setVillage] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const [savedNotice, setSavedNotice] = useState(false);
   const [resetNotice, setResetNotice] = useState(false);
+
+  // Sync profile details when loaded
+  useEffect(() => {
+    if (profile) {
+      if (profile.full_name) setFullName(profile.full_name);
+      if (profile.phone_number) setPhoneNumber(profile.phone_number);
+      if (profile.district) {
+        setSelectedKeralaDistrict(profile.district);
+      }
+      if (profile.village_or_town) setVillage(profile.village_or_town);
+    }
+  }, [profile]);
 
   const handleLanguageSelect = (code: SupportedLanguage) => {
     setLanguage(code);
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 2500);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileMessage(null);
+
+    if (!user) {
+      setProfileMessage({
+        type: 'error',
+        text: 'You must be signed in to update your profile.',
+      });
+      return;
+    }
+
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      setProfileMessage({
+        type: 'error',
+        text: t('common.name_validation', 'Farmer name must be at least 2 characters'),
+      });
+      return;
+    }
+
+    if (!isConfigured) {
+      setProfileMessage({
+        type: 'error',
+        text: t('auth.unconfigured_notice', 'Supabase credentials are not configured yet.'),
+      });
+      return;
+    }
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setProfileMessage({
+        type: 'error',
+        text: 'Database connection is unavailable.',
+      });
+      return;
+    }
+
+    setIsSavingProfile(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          full_name: fullName.trim(),
+          phone_number: phoneNumber.trim() || null,
+          preferred_language: language,
+          district: selectedKeralaDistrict,
+          village_or_town: village.trim() || null,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Update location context
+      setSelectedState('Kerala');
+      setSelectedDistrict(selectedKeralaDistrict);
+
+      await refreshProfile();
+      setProfileMessage({
+        type: 'success',
+        text: t('profile.updated_msg', 'Your profile information has been updated successfully.'),
+      });
+    } catch (err: any) {
+      setProfileMessage({
+        type: 'error',
+        text: err.message || 'Failed to update profile. Please try again.',
+      });
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleResetAllData = () => {
@@ -63,16 +187,16 @@ export default function SettingsPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
-              {t('modules.settings_title', 'Application Settings')}
+              {t('profile.title', 'Farmer Profile & Application Settings')}
             </h1>
             <Badge variant="success" size="sm">
-              Functional
+              Phase 2 Connected
             </Badge>
           </div>
           <p className="text-sm text-stone-600 mt-1">
             {t(
-              'modules.settings_subtitle',
-              'Configure interface language, default state & district, notifications, and offline preferences.'
+              'profile.subtitle',
+              'Update your personal information, preferred language, and regional Kerala location'
             )}
           </p>
         </div>
@@ -81,7 +205,7 @@ export default function SettingsPage() {
       {savedNotice && (
         <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-950 text-xs font-medium flex items-center gap-2 animate-in fade-in">
           <Check className="w-4 h-4 text-emerald-700" />
-          Language and regional location updated and saved to your device.
+          Language and regional location updated and saved.
         </div>
       )}
 
@@ -92,7 +216,153 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* 1. Language Selection Setting */}
+      {/* 1. Farmer Profile Details (Supabase Database Backed) */}
+      <Card className="border-emerald-200/80 shadow-xs">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-emerald-700" />
+              <CardTitle className="text-base sm:text-lg">
+                {t('profile.personal_heading', 'Farmer Identity & Profile')}
+              </CardTitle>
+            </div>
+            {user ? (
+              <span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-bold">
+                {user.email}
+              </span>
+            ) : (
+              <Link href="/login">
+                <Button size="sm" variant="outline">
+                  <LogIn className="w-3.5 h-3.5 mr-1" />
+                  Sign In to Edit
+                </Button>
+              </Link>
+            )}
+          </div>
+          <p className="text-xs text-stone-500 mt-1">
+            Your identity details are stored in Supabase with PostgreSQL Row Level Security.
+          </p>
+        </CardHeader>
+
+        <CardContent>
+          {profileMessage && (
+            <div
+              className={`p-3.5 mb-4 rounded-xl text-xs font-medium flex items-center gap-2 animate-in fade-in ${
+                profileMessage.type === 'success'
+                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-900'
+                  : 'bg-rose-50 border border-rose-200 text-rose-900'
+              }`}
+            >
+              {profileMessage.type === 'success' ? (
+                <Check className="w-4 h-4 text-emerald-700 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
+              <span>{profileMessage.text}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSaveProfile} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  {t('profile.full_name', 'Full Name')} *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    placeholder="e.g. Krishnan Nair"
+                    className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-stone-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  {t('profile.phone', 'Phone Number (Optional)')}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="+91 9876543210"
+                    className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-stone-900"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  {t('profile.district', 'Kerala District')} *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <select
+                    value={selectedKeralaDistrict}
+                    onChange={(e) => setSelectedKeralaDistrict(e.target.value as KeralaDistrict)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-stone-900 cursor-pointer"
+                  >
+                    {KERALA_DISTRICTS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  {t('profile.village', 'Village / Town (Optional)')}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                    <Building className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={village}
+                    onChange={(e) => setVillage(e.target.value)}
+                    placeholder="e.g. Mananthavady, Meppadi"
+                    className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-stone-900"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <Button
+                type="submit"
+                disabled={isSavingProfile || !user}
+                className="py-2.5 px-6 rounded-xl font-bold text-sm shadow-xs"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSavingProfile ? (
+                  <span>{t('profile.saving', 'Saving Changes...')}</span>
+                ) : (
+                  <span>{t('profile.save_profile', 'Save Profile Changes')}</span>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* 2. Language Selection Setting */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -165,7 +435,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 2. Default State & District Setting */}
+      {/* 3. Default State & District Setting */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -193,36 +463,28 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 3. Future Preferences Roadmap (Phase 2 & 5) */}
+      {/* 4. Security & Data Protection */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Bell className="w-5 h-5 text-stone-400" />
-            <CardTitle className="text-base text-stone-700">
-              Alerts & Offline Configuration (Future Phases)
+            <ShieldCheck className="w-5 h-5 text-emerald-700" />
+            <CardTitle className="text-base text-stone-800">
+              {t('profile.account_security', 'Account Security & Data Protection')}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-3 text-xs text-stone-600">
           <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
             <div>
-              <span className="font-semibold text-stone-800 block">WhatsApp & SMS Monsoon Alerts</span>
-              <span className="text-stone-500">Receive localized extreme weather warnings directly on your mobile.</span>
+              <span className="font-semibold text-stone-800 block">PostgreSQL Row Level Security (RLS)</span>
+              <span className="text-stone-500">Your farm records, plots, and crop details are accessible only by your authenticated session.</span>
             </div>
-            <Badge variant="demo" size="sm">Phase 2</Badge>
-          </div>
-
-          <div className="p-3 bg-stone-50 rounded-xl flex items-center justify-between">
-            <div>
-              <span className="font-semibold text-stone-800 block">Offline Mode & Service Worker Sync</span>
-              <span className="text-stone-500">Cache disease guide & emergency contacts for poor connectivity zones.</span>
-            </div>
-            <Badge variant="demo" size="sm">Phase 5 (PWA)</Badge>
+            <Badge variant="success" size="sm">Active</Badge>
           </div>
         </CardContent>
       </Card>
 
-      {/* 4. Reset Demo Data */}
+      {/* 5. Reset Demo Data */}
       <Card className="border-stone-200">
         <CardHeader>
           <div className="flex items-center gap-2">
